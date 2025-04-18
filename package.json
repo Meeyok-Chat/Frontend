@@ -9,6 +9,9 @@
     "lint": "next lint",
     "generate": "openapi-typescript https://meeyok-cloudrun-image-719562346977.asia-southeast1.run.app/docs/doc.json -o lib/api/schema.d.ts"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "^1.2.2",
