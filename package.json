@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate": "openapi-typescript https://meeyok-cloudrun-image-719562346977.asia-southeast1.run.app/docs/doc.json -o src/lib/api/schema.d.ts"
+    "generate": "openapi-typescript https://meeyok-cloudrun-image-719562346977.asia-southeast1.run.app/docs/doc.json -o lib/api/schema.d.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
