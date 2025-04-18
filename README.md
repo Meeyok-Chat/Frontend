@@ -1,38 +1,34 @@
-# sv
+/*************  ✨ Windsurf Command ⭐  *************/
+# Meeyok Chat Frontend
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+This is the frontend React + Tailwind project for Meeyok Chat project, a final project of Computer Network class.
 
-## Creating a project
+## Installation
 
-If you're seeing this, you've probably already done this step. Congrats!
+1. Clone the repository
+2. Install dependencies with `npm install`
+3. Start the development server with `npm run dev`
 
-```bash
-# create a new project in the current directory
-npx sv create
+## Development Guide
 
-# create a new project in my-app
-npx sv create my-app
-```
+### Setting up the development environment
 
-## Developing
+1. Clone the repository
+2. Install dependencies with `npm install`
+3. Start the development server with `npm run dev`
+4. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
-```bash
-npm run dev
+### Available scripts
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+* `npm run dev`: starts the development server
+* `npm run build`: builds the application for production
+* `npm run start`: starts the production server
+* `npm run lint`: runs the linter
 
-## Building
+### Technologies used
 
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+* React
+* Tailwind CSS
+* Next.js
+* TypeScript
