@@ -1,4 +1,3 @@
-/*************  ✨ Windsurf Command ⭐  *************/
 # Meeyok Chat Frontend
 
 This is the frontend React + Tailwind project for Meeyok Chat project, a final project of Computer Network class.
