@@ -12,6 +12,8 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
+export const runtime = 'edge';
+
 // Mock data for private chat
 const mockUsers = {
   user1: { id: "user1", name: "Alex Johnson", avatar: "/placeholder.svg?height=40&width=40" },

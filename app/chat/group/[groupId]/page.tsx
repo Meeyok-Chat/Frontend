@@ -20,6 +20,8 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer"
 
+export const runtime = 'edge';
+
 // Mock data for group chat
 const mockGroups = {
   group1: {
