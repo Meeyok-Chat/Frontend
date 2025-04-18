@@ -1,6 +1,8 @@
+"use client"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { OnlineUsersList } from "@/components/online-users-list"
 import { RecentChats } from "@/components/recent-chats"
 import { GroupsList } from "@/components/groups-list"
@@ -9,6 +11,8 @@ import { FriendsFeed } from "@/components/friends-feed"
 import Link from "next/link"
 
 export default function ChatDashboard() {
+  const [activeTab, setActiveTab] = useState("recent")
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0">
@@ -27,22 +31,45 @@ export default function ChatDashboard() {
             </CardContent>
           </Card>
 
-          <Tabs defaultValue="recent">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="recent">Recent Chats</TabsTrigger>
-              <TabsTrigger value="groups">Groups</TabsTrigger>
-              <TabsTrigger value="feed">Friends Feed</TabsTrigger>
-            </TabsList>
-            <TabsContent value="recent" className="mt-4">
-              <RecentChats />
-            </TabsContent>
-            <TabsContent value="groups" className="mt-4">
-              <GroupsList />
-            </TabsContent>
-            <TabsContent value="feed" className="mt-4">
-              <FriendsFeed />
-            </TabsContent>
-          </Tabs>
+          <div className="w-full">
+            <div className="grid w-full grid-cols-3 border-b">
+              <button
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === "recent"
+                    ? "border-b-2 border-blue-500 text-gray-900"
+                    : "text-gray-500 hover:bg-gray-100"
+                }`}
+                onClick={() => setActiveTab("recent")}
+              >
+                Recent Chats
+              </button>
+              <button
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === "groups"
+                    ? "border-b-2 border-blue-500 text-gray-900"
+                    : "text-gray-500 hover:bg-gray-100"
+                }`}
+                onClick={() => setActiveTab("groups")}
+              >
+                Groups
+              </button>
+              <button
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === "feed"
+                    ? "border-b-2 border-blue-500 text-gray-900"
+                    : "text-gray-500 hover:bg-gray-100"
+                }`}
+                onClick={() => setActiveTab("feed")}
+              >
+                Friends Feed
+              </button>
+            </div>
+            <div className="mt-4">
+              {activeTab === "recent" && <RecentChats />}
+              {activeTab === "groups" && <GroupsList />}
+              {activeTab === "feed" && <FriendsFeed />}
+            </div>
+          </div>
         </div>
 
         <div className="md:w-1/3 space-y-4">
