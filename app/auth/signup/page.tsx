@@ -10,6 +10,8 @@ import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { signup } from "@/lib/auth"
+import { fetchClient } from "@/lib/api/client"
 
 export default function SignUp() {
   const [displayName, setDisplayName] = useState("")
@@ -34,15 +36,29 @@ export default function SignUp() {
 
     setIsLoading(true)
 
-    // Simulate account creation
-    setTimeout(() => {
-      setIsLoading(false)
-      toast({
-        title: "Account created",
-        description: "Welcome to Meeyok Chat!",
+    try {
+      await signup(email, password);
+      const user = await fetchClient.GET("/users/me");
+      const userId = user.data?.id;
+      if (!userId) throw Error("Unable to get user id");
+
+      const result = await fetchClient.PATCH("/users/{id}/username", {
+        params: {
+          path: { id: userId }
+        },
+        body: {
+          username: displayName,
+        }
       })
+      if (!result.response.ok) throw Error("An error occured while trying to set username: " + result.response.text());
+
       router.push("/chat")
-    }, 1500)
+    } catch (err: any) {
+      alert(err.message);
+      console.error('Error while signing up', err);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
