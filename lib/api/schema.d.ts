@@ -44,55 +44,7 @@ export interface paths {
                 };
             };
         };
-        /**
-         * Update a chat
-         * @description Updates the details of an existing chat
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Updated chat details */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["models.Chat"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["models.HTTPError"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["models.HTTPError"];
-                    };
-                };
-            };
-        };
+        put?: never;
         /**
          * Create a new chat
          * @description Creates a new chat with the provided chat details
@@ -265,7 +217,58 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        /**
+         * Update a chat
+         * @description Updates the details of an existing chat
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Chat ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description Updated chat details */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["models.Chat"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["models.HTTPError"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["models.HTTPError"];
+                    };
+                };
+            };
+        };
         post?: never;
         /**
          * Delete a chat
@@ -305,71 +308,6 @@ export interface paths {
                 };
             };
         };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/chats/{id}/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get messages in a chat
-         * @description Retrieves messages for a specific chat with pagination
-         */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Page number for pagination */
-                    page?: number;
-                    /** @description Number of messages per page */
-                    "num-message"?: number;
-                };
-                header?: never;
-                path: {
-                    /** @description Chat ID */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["models.Message"][];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["models.HTTPError"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["models.HTTPError"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -504,7 +442,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/friendships/{id}/accept": {
+    "/friendships/accept/{userId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -519,15 +457,15 @@ export interface paths {
         head?: never;
         /**
          * Accept a friend request
-         * @description Accepts a pending friend request by updating the status
+         * @description Accepts a pending friend request between the current user and the specified user
          */
         patch: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description Friendship ID */
-                    id: string;
+                    /** @description Friend's user ID */
+                    userId: string;
                 };
                 cookie?: never;
             };
@@ -564,7 +502,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/friendships/{id}/reject": {
+    "/friendships/reject/{userId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -579,15 +517,15 @@ export interface paths {
         head?: never;
         /**
          * Reject a friend request
-         * @description Rejects a pending friend request and removes it from the system
+         * @description Rejects a pending friend request between the current user and the specified user
          */
         patch: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description Friendship ID */
-                    id: string;
+                    /** @description Friend's user ID */
+                    userId: string;
                 };
                 cookie?: never;
             };
@@ -622,6 +560,66 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/friendships/{status}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get list of friends with status filter
+         * @description Returns a list of users who are friends or pending with the given user
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Friendship status: accepted, pending, or rejected */
+                    status: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["models.User"][];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["models.HTTPError"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["models.HTTPError"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/posts": {
@@ -880,55 +878,7 @@ export interface paths {
             };
         };
         put?: never;
-        /**
-         * Create a new user
-         * @description Registers a new user in the system
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description User details */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["models.User"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["models.HTTPError"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["models.HTTPError"];
-                    };
-                };
-            };
-        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1315,13 +1265,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
          * Initialize WebSocket connection
          * @description Prepares for WebSocket connection by checking existing client
          */
-        post: {
+        get: {
             parameters: {
                 query?: never;
                 header?: never;
@@ -1361,6 +1309,8 @@ export interface paths {
                 };
             };
         };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1467,7 +1417,6 @@ export interface components {
         "models.User": {
             chats?: string[];
             email?: string;
-            friends?: string[];
             id?: string;
             posts?: string[];
             role?: string;
