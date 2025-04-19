@@ -42,6 +42,8 @@ export default function SignUp() {
       const userId = user.data?.id;
       if (!userId) throw Error("Unable to get user id");
 
+      console.log('user id', userId)
+
       const result = await fetchClient.PATCH("/users/{id}/username", {
         params: {
           path: { id: userId }
@@ -50,7 +52,7 @@ export default function SignUp() {
           username: displayName,
         }
       })
-      if (!result.response.ok) throw Error("An error occured while trying to set username: " + result.response.text());
+      if (!result.response.ok) throw Error("An error occured while trying to set username: " + result.error);
 
       router.push("/chat")
     } catch (err: any) {
