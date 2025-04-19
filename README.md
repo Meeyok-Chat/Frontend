@@ -24,6 +24,7 @@ This is the frontend React + Tailwind project for Meeyok Chat project, a final p
 * `npm run build`: builds the application for production
 * `npm run start`: starts the production server
 * `npm run lint`: runs the linter
+* `npm run generate`: to generate api typings from Meeyok Swagger documentation
 
 ### Technologies used
 
