@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { signup } from "@/lib/auth"
 import { fetchClient } from "@/lib/api/client"
+import { useSocket } from "@/lib/websocket/context"
 
 export default function SignUp() {
   const [displayName, setDisplayName] = useState("")
@@ -21,6 +22,8 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+
+  const { setConnectedUserId } = useSocket()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,6 +55,7 @@ export default function SignUp() {
       })
       if (!result.response.ok) throw Error("An error occured while trying to set username: " + result.response.text());
 
+      setConnectedUserId(userId);
       router.push("/chat")
     } catch (err: any) {
       alert(err.message);
