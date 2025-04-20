@@ -5,12 +5,12 @@ import { ReactNode } from "react";
 import { fetchClient } from "@/lib/api/client";
 
 // context type
-type SocketContext = {
+interface SocketContextProps {
   socket: Socket | null;
   setConnectedUserId: (userId: string) => void;
 };
 
-const SocketContext = createContext<SocketContext | null>(null);
+const SocketContext = createContext<SocketContextProps | null>(null);
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -91,5 +91,5 @@ export const useSocket = () => {
   if (!context) {
     throw new Error("useSocket must be used within a SocketProvider");
   }
-  return context.socket;
+  return context;
 };
