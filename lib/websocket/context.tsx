@@ -25,7 +25,6 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   }
 
   async function initWs() {
-    if (connectedUserId) return;
     const res = await fetchClient.GET("/ws/init");
 
     if (!res.response.ok) {
