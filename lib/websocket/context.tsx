@@ -1,27 +1,60 @@
 "use client";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { io, Socket } from "socket.io-client";
 import { ReactNode } from "react";
 import { fetchClient } from "@/lib/api/client";
+import useWebSocket from "react-use-websocket";
 
 // context type
 interface SocketContextProps {
-  socket: Socket | null;
   setConnectedUserId: (userId: string) => void;
-};
+  sendJsonMessage: (message: WebSocketEvent) => void;
+  lastJsonMessage: WebSocketEvent | null;
+  readyState: number;
+}
 
 const SocketContext = createContext<SocketContextProps | null>(null);
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [connectedUserId, setConnectedUserId] = useState<string | null>(null);
-  const serverUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const [isEnableWs, setIsEnableWs] = useState(false);
+
+  const serverUrl = useMemo(
+    () => process.env.NEXT_PUBLIC_BACKEND_URL + "/ws/" + connectedUserId,
+    [connectedUserId]
+  );
+  const { sendJsonMessage, lastJsonMessage, readyState, getWebSocket } =
+    useWebSocket<WebSocketEvent>(
+      serverUrl,
+      {
+        onOpen: () => {
+          console.log("WebSocket connection opened");
+        },
+        onClose: () => {
+          console.log("WebSocket connection closed");
+        },
+        onError: (event) => {
+          console.error("WebSocket error:", event);
+        },
+        shouldReconnect: (closeEvent) => {
+          console.log("Should reconnect:", closeEvent);
+          return true; // Return true to reconnect
+        },
+
+        onMessage: (event) => {
+          console.log("WebSocket message received:", event.data);
+        },
+        reconnectAttempts: 1,
+      },
+      isEnableWs
+    );
 
   function cleanup() {
+    const socket = getWebSocket();
     if (socket) {
-      socket.disconnect();
-      setSocket(null);
+      socket.close();
     }
+    setIsEnableWs(false);
+    setConnectedUserId(null);
   }
 
   async function initWs() {
@@ -33,6 +66,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     } else {
       console.log("Websocket initialized");
     }
+
+    setIsEnableWs(true);
   }
 
   useEffect(() => {
@@ -44,42 +79,20 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     // Send /ws/init
     initWs();
 
-    // Initialize Socket.IO client
-    const socketInstance = io(serverUrl, {
-      path: `ws/${connectedUserId}`,
-      reconnection: true,
-      retries: 3,
-    });
-    setSocket(socketInstance);
-
-    // Clean up on unmount
     return () => {
       cleanup();
     };
   }, [connectedUserId]);
 
-  //   useEffect(() => {
-  //     async function initWs() {
-  //       if (isInitWs) return;
-  //       const res = await fetchClient.POST("/ws/init");
-
-  //       if (!res.response.ok) {
-  //         console.error(
-  //           "Error while initializing websocket",
-  //           res.response.text()
-  //         );
-  //         return;
-  //       } else {
-  //         console.log("Websocket initialized");
-  //         setIsInitWs(true);
-  //       }
-  //     }
-
-  //     if (!socket || !isInitWs) initWs();
-  //   }, []);
-
   return (
-    <SocketContext.Provider value={{ socket, setConnectedUserId }}>
+    <SocketContext.Provider
+      value={{
+        setConnectedUserId,
+        sendJsonMessage,
+        lastJsonMessage,
+        readyState,
+      }}
+    >
       {children}
     </SocketContext.Provider>
   );
