@@ -1,38 +1,120 @@
-"use client"
+"use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
-import { ArrowLeft, Search } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import { ArrowLeft, Search } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { fetchClient } from "@/lib/api/client";
 
-// Mock online users data
-const mockOnlineUsers = [
-  { id: "user1", name: "Alex Johnson", avatar: "/placeholder.svg?height=40&width=40", status: "online" },
-  { id: "user2", name: "Sam Wilson", avatar: "/placeholder.svg?height=40&width=40", status: "online" },
-  { id: "user3", name: "Taylor Smith", avatar: "/placeholder.svg?height=40&width=40", status: "online" },
-  { id: "user4", name: "Jordan Lee", avatar: "/placeholder.svg?height=40&width=40", status: "online" },
-  { id: "user5", name: "Casey Brown", avatar: "/placeholder.svg?height=40&width=40", status: "online" },
-]
+type User = {
+  id: string;
+  name: string;
+  avatar?: string;
+};
 
 export default function NewChat() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const router = useRouter()
-  const { toast } = useToast()
+  const [searchQuery, setSearchQuery] = useState("");
+  const [users, setUsers] = useState<User[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const router = useRouter();
+  const { toast } = useToast();
 
-  const filteredUsers = mockOnlineUsers.filter((user) => user.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  // get current user id
+  const getCurrentUserId = async () => {
+    try {
+      const res = await fetchClient.GET("/users/me");
+      return res.data?.id;
+    } catch (error) {
+      console.error("Failed to fetch current user ID", error);
+      return null;
+    }
+  };
 
-  const handleStartChat = (userId: string) => {
-    toast({
-      title: "Chat started",
-      description: "You can now start messaging",
-    })
-    router.push(`/chat/${userId}`)
-  }
+  useEffect(() => {
+    const fetchCurrentUserId = async () => {
+      const userId = await getCurrentUserId();
+      setCurrentUserId(userId || "");
+      if (!userId) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch current user ID",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchCurrentUserId();
+  }, []);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetchClient.GET("/users");
+        setUsers(
+          (res.data || []).map((user: any) => ({
+            id: user.id,
+            name: user.username || "Unknown",
+            avatar: user.avatar,
+          }))
+        );
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch users",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // TODO: This doesn't work ???
+  const handleStartChat = async (userId: string) => {
+    try {
+      const chatPayload = {
+        name: "New Chat",
+        type: "private",
+        updatedAt: new Date().toISOString(),
+        users: [userId, currentUserId],
+        messages: [],
+      };
+
+      const res = await fetchClient.POST("/chats", {
+        body: chatPayload,
+      });
+
+      toast({
+        title: "Chat started",
+        description: "You can now start messaging",
+      });
+
+      if (res.data?.id) {
+        router.push(`/chat/${res.data.id}`);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to retrieve chat ID",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create chat",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -70,8 +152,13 @@ export default function NewChat() {
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <Avatar>
-                            <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                            <AvatarImage
+                              src={user.avatar || "/placeholder.svg"}
+                              alt={user.name}
+                            />
+                            <AvatarFallback>
+                              {user.name.charAt(0)}
+                            </AvatarFallback>
                           </Avatar>
                           <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-1 ring-white" />
                         </div>
@@ -88,5 +175,5 @@ export default function NewChat() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
