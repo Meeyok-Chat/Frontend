@@ -161,7 +161,7 @@ export default function PrivateChat() {
     }
   }, [lastJsonMessage]);
 
-  if (!anotherUser || !chatData) {
+  if (!anotherUser || !chatData || !myUser) {
     return <div>Loading...</div>;
   }
 
