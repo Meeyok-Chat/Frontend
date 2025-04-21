@@ -44,6 +44,9 @@ export default function SignUp() {
       const userId = user.data?.id;
       if (!userId) throw Error("Unable to get user id");
 
+      console.log("payload", {
+        username: displayName,
+      })
       const result = await fetchClient.PATCH("/users/{id}/username", {
         params: {
           path: { id: userId }
@@ -53,6 +56,7 @@ export default function SignUp() {
         }
       })
       if (!result.response.ok) throw Error("An error occured while trying to set username: " + result.error);
+      console.log("changed user name", result.data)
 
       setConnectedUserId(userId);
       router.push("/chat")

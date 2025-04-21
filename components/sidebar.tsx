@@ -31,11 +31,11 @@ const sidebarItems = [
     icon: UserCheck,
     href: "/chat/pending-requests",
   },
-  {
-    title: "Settings",
-    icon: Settings,
-    href: "/settings",
-  },
+  // {
+  //   title: "Settings",
+  //   icon: Settings,
+  //   href: "/settings",
+  // },
 ]
 
 export function Sidebar() {

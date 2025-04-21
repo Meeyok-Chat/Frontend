@@ -26,7 +26,6 @@ export default function Profile() {
       try {
         const response = await fetchClient.GET("/users/me");
         if (response.data) {
-          console.log('user data', response.data)
           setDisplayName(response.data.username ?? '');
           setId(response.data.id ?? '');
         } else {
@@ -71,7 +70,7 @@ export default function Profile() {
               <CardDescription>Manage your personal information</CardDescription>
             </div>
           </CardHeader>
-          <form onSubmit={handleUpdateProfile}>
+          <div >
             <CardContent className="p-4 space-y-6">
               {/* <div className="flex flex-col items-center justify-center space-y-2">
                 <Avatar className="h-24 w-24">
@@ -90,10 +89,21 @@ export default function Profile() {
 
               <div className="space-y-2">
                 <Label htmlFor="status">User ID</Label>
-                <Input id="status" value={status} onChange={(e) => setStatus(e.target.value)} />
+                <div className="flex flex-row items-center gap-4">
+                  <div className="flex text-base" >{id}</div>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    // navigator.clipboard.writeText(id)
+                    toast({
+                      title: "Copied",
+                      description: "User ID copied to clipboard",
+                    })
+                  }}>
+                    Copy User ID
+                  </Button>
+                </div>
               </div>
 
-              <Separator />
+              {/* <Separator /> */}
 
               {/* <div className="space-y-2">
                 <Label htmlFor="note">Status Note</Label>
@@ -106,7 +116,7 @@ export default function Profile() {
                 {isLoading ? "Updating..." : "Update Profile"}
               </Button>
             </CardFooter>
-          </form>
+          </div>
         </Card>
       </div>
     </div>

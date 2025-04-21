@@ -14,13 +14,15 @@ import { LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "./user-provider"
+import { signout } from "@/lib/auth"
 
 export function MainNav() {
   const { user } = useUser()
   const router = useRouter()
   const { toast } = useToast()
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    await signout();
     toast({
       title: "Signed out",
       description: "You have been signed out successfully",
@@ -59,12 +61,12 @@ export function MainNav() {
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                {/* <DropdownMenuItem asChild>
                   <Link href="/settings" className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer text-red-600" onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
