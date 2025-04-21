@@ -12,13 +12,35 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { fetchClient } from "@/lib/api/client"
 
 export default function Profile() {
-  const [displayName, setDisplayName] = useState("John Doe")
-  const [status, setStatus] = useState("Available")
-  const [isLoading, setIsLoading] = useState(false)
+  const [displayName, setDisplayName] = useState("Loading...")
+  const [id, setId] = useState("Loading...")
+  const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetchClient.GET("/users/me");
+        if (response.data) {
+          console.log('user data', response.data)
+          setDisplayName(response.data.username ?? '');
+          setId(response.data.id ?? '');
+        } else {
+          throw Error("An error occurred while loading user profile: " + response.error.message);
+        }
+      } catch (err: any) {
+        alert(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchUserProfile();
+  }, [])
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,7 +73,7 @@ export default function Profile() {
           </CardHeader>
           <form onSubmit={handleUpdateProfile}>
             <CardContent className="p-4 space-y-6">
-              <div className="flex flex-col items-center justify-center space-y-2">
+              {/* <div className="flex flex-col items-center justify-center space-y-2">
                 <Avatar className="h-24 w-24">
                   <AvatarImage src="/placeholder.svg?height=96&width=96" alt="Profile" />
                   <AvatarFallback>JD</AvatarFallback>
@@ -59,7 +81,7 @@ export default function Profile() {
                 <Button variant="outline" size="sm">
                   Change Avatar
                 </Button>
-              </div>
+              </div> */}
 
               <div className="space-y-2">
                 <Label htmlFor="displayName">Display Name</Label>
@@ -67,17 +89,17 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">User ID</Label>
                 <Input id="status" value={status} onChange={(e) => setStatus(e.target.value)} />
               </div>
 
               <Separator />
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="note">Status Note</Label>
                 <Textarea id="note" placeholder="Share what's on your mind..." className="resize-none" rows={3} />
                 <p className="text-xs text-slate-500">This note will be visible to your friends</p>
-              </div>
+              </div> */}
             </CardContent>
             <CardFooter className="border-t p-4">
               <Button type="submit" className="w-full" disabled={isLoading}>
