@@ -1,7 +1,7 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateCurrentUser } from "firebase/auth";
 import { auth } from "./firebase";
 
-import { browserLocalPersistence, setPersistence } from "firebase/auth";
+import { setPersistence, browserLocalPersistence  } from "firebase/auth";
 
 export const signup = async (email: string, password: string) => {
     await setPersistence(auth, browserLocalPersistence);
@@ -20,6 +20,7 @@ export const signout = async () => {
 }
 
 export const getUserToken = async () => {
+    await auth.authStateReady();
     const user = auth.currentUser;
     const token = await user?.getIdToken();
     return token;
