@@ -212,7 +212,9 @@ export default function GroupChat() {
       params: {
         path: { id: groupId },
       },
-      body: {},
+      body: {
+        users: [userId],
+      },
     });
 
     if (!res || !res.data || res.response.status !== 200) {
