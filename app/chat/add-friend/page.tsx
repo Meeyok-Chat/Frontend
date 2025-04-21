@@ -48,10 +48,10 @@ export default function AddFriend() {
 
       if (!result.response.ok)
         throw Error(
-          "An error occurred while sending the friend request: " + result.error
+          "An error occurred while sending the friend request: " + result.error?.message
         );
 
-      toast(`Friend request sent to ${friendId}`, { type: "success" });
+      toast(`Friend request sent.`, { type: "success" });
     } catch (err: any) {
       toast(`Error: ${err.message}`, { type: "error" });
     } finally {
@@ -78,7 +78,7 @@ export default function AddFriend() {
         <form onSubmit={handleAddFriend}>
           <CardContent className="p-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="friendId">Friend's ID or Display Name</Label>
+              <Label htmlFor="friendId">Friend's ID</Label>
               <Input
                 id="friendId"
                 placeholder="Enter friend's ID or display name"
