@@ -3,15 +3,14 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { fetchClient } from "@/lib/api/client"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
 type Friend = {
   id: string
-  name: string
-  avatar: string
-  status: "online" | "away" | "offline"
-  lastSeen?: Date
+  username: string
+  status: "online" | "offline"
 }
 
 export function FriendsList() {
@@ -19,39 +18,35 @@ export function FriendsList() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate fetching friends
-    setTimeout(() => {
-      const mockFriends: Friend[] = [
-        {
-          id: "user1",
-          name: "Alex Johnson",
-          avatar: "/placeholder.svg?height=40&width=40",
-          status: "online",
-        },
-        {
-          id: "user2",
-          name: "Sam Wilson",
-          avatar: "/placeholder.svg?height=40&width=40",
-          status: "online",
-        },
-        {
-          id: "user3",
-          name: "Taylor Smith",
-          avatar: "/placeholder.svg?height=40&width=40",
-          status: "offline",
-          lastSeen: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        },
-        {
-          id: "user4",
-          name: "Jordan Lee",
-          avatar: "/placeholder.svg?height=40&width=40",
-          status: "away",
-        },
-      ]
+    const fetchFriends = async () => {
+      try {
+        const response = await fetchClient.GET("/friendships/{status}", {
+          params: {
+            path: {
+              status: "accepted"
+            }
+          }
+        });
+        // backend can send null if response is empty
+        if(response.data === null) response.data = [];
 
-      setFriends(mockFriends)
-      setIsLoading(false)
-    }, 1000)
+        if (!response.data) throw Error("An error occurred while loading friends: " + response.error.message);
+        
+        setFriends(response.data.map(u => ({
+          id: u.id!,
+          username: u.username!,
+
+          // TODO: set status from online users
+          status: "online"
+        })));
+      } catch (err: any) {
+        console.error('Error while fetching friends', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchFriends()
   }, [])
 
   if (isLoading) {
@@ -77,31 +72,22 @@ export function FriendsList() {
           <Link key={friend.id} href={`/chat/user/${friend.id}`}>
             <Button variant="ghost" className="w-full justify-start p-2 h-auto">
               <div className="flex items-center gap-3 w-full">
-                <div className="relative">
+                {/* <div className="relative">
                   <Avatar>
                     <AvatarImage src={friend.avatar || "/placeholder.svg"} alt={friend.name} />
                     <AvatarFallback>{friend.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <span
-                    className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ring-1 ring-white ${
-                      friend.status === "online"
+                    className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ring-1 ring-white ${friend.status === "online"
                         ? "bg-green-500"
-                        : friend.status === "away"
-                          ? "bg-yellow-500"
-                          : "bg-slate-300"
-                    }`}
+                        : "bg-slate-300"
+                      }`}
                   />
-                </div>
+                </div> */}
                 <div className="flex-1 overflow-hidden">
-                  <p className="truncate">{friend.name}</p>
+                  <p className="truncate">{friend.username}</p>
                   <p className="text-xs text-slate-500">
-                    {friend.status === "online"
-                      ? "Online"
-                      : friend.status === "away"
-                        ? "Away"
-                        : friend.lastSeen
-                          ? `Last seen ${formatLastSeen(friend.lastSeen)}`
-                          : "Offline"}
+                    {friend.status === "online" ? "Online" : "Offline"}
                   </p>
                 </div>
               </div>

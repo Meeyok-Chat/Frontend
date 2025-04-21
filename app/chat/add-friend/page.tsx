@@ -81,7 +81,7 @@ export default function AddFriend() {
               <Label htmlFor="friendId">Friend's ID</Label>
               <Input
                 id="friendId"
-                placeholder="Enter friend's ID or display name"
+                placeholder="Enter friend's ID"
                 value={friendId}
                 onChange={(e) => setFriendId(e.target.value)}
                 required
