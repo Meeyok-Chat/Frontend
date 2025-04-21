@@ -40,8 +40,8 @@ export default function AddFriend() {
       const result = await fetchClient.POST("/friendships", {
         params: {
           query: {
-            id1: userId,
-            id2: friendId,
+            // TODO: Update type to match backend latest swagger 
+            id: friendId
           },
         },
       });

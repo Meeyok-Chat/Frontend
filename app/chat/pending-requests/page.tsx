@@ -33,7 +33,11 @@ export default function PendingFriendRequests() {
             }
           }
         })
-        if (!response.data) throw new Error(response.error.message);
+
+        if (!response.data) {
+          if (!response.response.ok) throw new Error(response.error.message);
+          else response.data = [];
+        }
 
         setPendingRequests(response.data)
       } catch (err: any) {

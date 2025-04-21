@@ -12,6 +12,7 @@ export const signup = async (email: string, password: string) => {
 export const signin = async (email: string, password: string) => {
     await setPersistence(auth, browserLocalPersistence);
     const user = await signInWithEmailAndPassword(auth, email, password);
+    console.log(await user.user.getIdToken())
     return user;
 }
 

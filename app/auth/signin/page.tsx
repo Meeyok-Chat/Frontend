@@ -43,7 +43,7 @@ export default function SignIn() {
       toast("Welcome to Meeyok Chat!", { type: "info" });
       router.push("/chat");
     } catch (error: any) {
-      alert(error.message);
+      toast(error.message, { type: "error" });
       console.error("Error while signing up", error);
     } finally {
       setIsLoading(false);
@@ -74,7 +74,7 @@ export default function SignIn() {
                 />
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                {/* <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
                   <Link
                     href="/auth/forgot-password"
@@ -82,7 +82,7 @@ export default function SignIn() {
                   >
                     Forgot password?
                   </Link>
-                </div>
+                </div> */}
                 <Input
                   id="password"
                   type="password"

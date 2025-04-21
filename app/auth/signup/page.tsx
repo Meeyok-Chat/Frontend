@@ -53,7 +53,7 @@ export default function SignUp() {
       setConnectedUserId(userId);
       router.push("/chat")
     } catch (err: any) {
-      alert(err.message);
+      toast(err.message, { type: "error" });
       console.error('Error while signing up', err);
     } finally {
       setIsLoading(false);

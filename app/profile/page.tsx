@@ -28,7 +28,7 @@ export default function Profile() {
           throw Error("An error occurred while loading user profile: " + response.error.message);
         }
       } catch (err: any) {
-        alert(err.message);
+        toast(err.message, { type: "error" });
       } finally {
         setIsLoading(false);
       }
@@ -53,7 +53,7 @@ export default function Profile() {
       })
       if (!result.response.ok) throw Error("An error occured while trying to set username: " + result.error);
     } catch (err: any) {
-      alert(err.message);
+      toast(err.message, { type: "error" });
       console.error('Error while editing profile', err);
     } finally {
       setIsLoading(false);

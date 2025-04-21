@@ -5,21 +5,18 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
+import { fetchClient } from "@/lib/api/client"
 import { Heart, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { toast } from "react-toastify"
 
 type Note = {
-  id: string
-  userId: string
-  userName: string
-  userAvatar: string
-  content: string
-  timestamp: Date
-  likes: number
-  hasLiked: boolean
-  comments: number
+  id?: string
+  userId?: string
+  userName?: string
+  content?: string
+  createdAt?: string
 }
 
 export function FriendsFeed() {
@@ -29,47 +26,21 @@ export function FriendsFeed() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    // Simulate fetching notes
-    setTimeout(() => {
-      const mockNotes: Note[] = [
-        {
-          id: "note1",
-          userId: "user1",
-          userName: "Alex Johnson",
-          userAvatar: "/placeholder.svg?height=40&width=40",
-          content: "Just finished a great book! Would highly recommend 'The Midnight Library' to everyone.",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-          likes: 5,
-          hasLiked: false,
-          comments: 2,
-        },
-        {
-          id: "note2",
-          userId: "user2",
-          userName: "Sam Wilson",
-          userAvatar: "/placeholder.svg?height=40&width=40",
-          content: "Working on a new project. Can't wait to share it with you all!",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
-          likes: 8,
-          hasLiked: true,
-          comments: 4,
-        },
-        {
-          id: "note3",
-          userId: "user3",
-          userName: "Taylor Smith",
-          userAvatar: "/placeholder.svg?height=40&width=40",
-          content: "Beautiful day for a hike! 🏞️",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-          likes: 12,
-          hasLiked: false,
-          comments: 3,
-        },
-      ]
+    const fetchPosts = async () => {
+      setIsLoading(true)
 
-      setNotes(mockNotes)
-      setIsLoading(false)
-    }, 1000)
+      try {
+        const response = await fetchClient.GET("/posts")
+        if (!response.data) throw new Error(response.error.message)
+        setNotes(response.data)
+      } catch (err: any) {
+        console.error(err);
+        toast(`Error: ${err.message}`, { type: "error" });
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchPosts()
   }, [])
 
   const handlePostNote = () => {
@@ -83,12 +54,8 @@ export function FriendsFeed() {
         id: `note${Date.now()}`,
         userId: "me",
         userName: "You",
-        userAvatar: "/placeholder.svg?height=40&width=40",
         content: newNote,
-        timestamp: new Date(),
-        likes: 0,
-        hasLiked: false,
-        comments: 0,
+        createdAt: new Date().toISOString(),
       }
 
       setNotes([newNoteObj, ...notes])
@@ -99,20 +66,6 @@ export function FriendsFeed() {
     }, 1000)
   }
 
-  const handleLike = (noteId: string) => {
-    setNotes((prev) =>
-      prev.map((note) => {
-        if (note.id === noteId) {
-          return {
-            ...note,
-            likes: note.hasLiked ? note.likes - 1 : note.likes + 1,
-            hasLiked: !note.hasLiked,
-          }
-        }
-        return note
-      }),
-    )
-  }
 
   if (isLoading) {
     return (
@@ -151,40 +104,23 @@ export function FriendsFeed() {
               <Card key={note.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
-                    <Link href={`/chat/${note.userId}`}>
+                    {/* <Link href={`/chat/${note.userId}`}>
                       <Avatar>
                         <AvatarImage src={note.userAvatar || "/placeholder.svg"} alt={note.userName} />
                         <AvatarFallback>{note.userName.charAt(0)}</AvatarFallback>
                       </Avatar>
-                    </Link>
+                    </Link> */}
                     <div>
                       <Link href={`/chat/${note.userId}`} className="font-medium hover:underline">
                         {note.userName}
                       </Link>
-                      <p className="text-xs text-slate-500">{formatTimestamp(note.timestamp)}</p>
+                      <p className="text-xs text-slate-500">{formatTimestamp(new Date(note.createdAt!))}</p>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <p className="whitespace-pre-wrap">{note.content}</p>
                 </CardContent>
-                <CardFooter className="border-t pt-3">
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center gap-1"
-                      onClick={() => handleLike(note.id)}
-                    >
-                      <Heart className={`h-4 w-4 ${note.hasLiked ? "fill-red-500 text-red-500" : ""}`} />
-                      <span>{note.likes}</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                      <MessageSquare className="h-4 w-4" />
-                      <span>{note.comments}</span>
-                    </Button>
-                  </div>
-                </CardFooter>
               </Card>
             ))}
           </div>
