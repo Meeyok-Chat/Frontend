@@ -13,6 +13,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { components } from "@/lib/api/schema";
 import { fetchClient } from "@/lib/api/client";
+import { useSocket } from "@/lib/websocket/context";
 
 export const runtime = "edge";
 
@@ -30,6 +31,10 @@ export default function PrivateChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
 
+  // my user data
+  const [myUser, setMyUser] = useState<
+    components["schemas"]["models.User"] | null
+  >(null);
   // another user chatting with me
   const [anotherUser, setAnotherUser] = useState<
     components["schemas"]["models.User"] | null
@@ -59,13 +64,13 @@ export default function PrivateChat() {
   }
 
   async function fetchUser() {
-    const data = await fetchClient.GET("/users/me");
-    if (!data || !data.data) {
+    const myUserData = await fetchClient.GET("/users/me");
+    if (!myUserData || !myUserData.data) {
       console.log("Error fetching user data");
       return null;
     }
-    const userId = data.data.id as string;
-    const anotherUserId = chatData?.users?.find((id) => id !== userId) || null;
+    const myUserId = myUserData.data.id as string;
+    const anotherUserId = chatData?.users?.find((id) => id !== myUserId) || null;
     if (!anotherUserId) {
       console.log("Unauthorized Access, No your user found in chat data");
       return null;
@@ -79,7 +84,9 @@ export default function PrivateChat() {
       console.log("Error fetching another user data");
       return null;
     }
-    return anotherUserData.data;
+
+    setMyUser(myUserData.data);
+    setAnotherUser(anotherUserData.data);
   }
 
   // Fetching data
@@ -100,9 +107,7 @@ export default function PrivateChat() {
         }
       })
       .then(() =>
-        fetchUser().then((user) => {
-          setAnotherUser(user);
-        })
+        fetchUser()
       );
   }, [chatId]);
 
@@ -111,6 +116,8 @@ export default function PrivateChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+
+  const { sendJsonMessage, lastJsonMessage } = useSocket();
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -125,21 +132,34 @@ export default function PrivateChat() {
     };
 
     setMessages([...messages, message]);
+    sendJsonMessage({
+      type: EventType.EVENT_SEND_MESSAGE,
+      payload: {
+        chat_id: chatId,
+        message: newMessage,
+        from: myUser?.id || "", // should not be empty string
+        createAt: new Date().toISOString(),
+      }
+    });
     setNewMessage("");
-
-    // Simulate receiving a response
-    // setTimeout(() => {
-    //   const response: Message = {
-    //     id: (Date.now() + 1).toString(),
-    //     senderId: userId,
-    //     text: "Thanks for your message! I'll get back to you soon.",
-    //     timestamp: new Date(),
-    //     isRead: false,
-    //   };
-
-    //   setMessages((prev) => [...prev, response]);
-    // }, 2000);
   };
+
+  useEffect(() => {
+    if (!lastJsonMessage) return;
+
+    if (lastJsonMessage.type === EventType.EVENT_NEW_MESSAGE) {
+      if (lastJsonMessage.payload.chat_id !== chatId) return;
+
+      const newMessage: Message = {
+        id: messages.length.toString(),
+        senderId: lastJsonMessage.payload.from,
+        text: lastJsonMessage.payload.message,
+        timestamp: new Date(lastJsonMessage.payload.createAt),
+        isRead: false,
+      };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    }
+  }, [lastJsonMessage]);
 
   if (!anotherUser || !chatData) {
     return <div>Loading...</div>;

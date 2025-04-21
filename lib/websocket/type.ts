@@ -11,6 +11,6 @@ type WSMessageEvent = {
 };
 
 type WebSocketEvent = {
-  type: string;
+  type: EventType;
   payload: WSMessageEvent;
 };
