@@ -1,40 +1,72 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
-import { ArrowLeft } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { fetchClient } from "@/lib/api/client";
 
 export default function AddFriend() {
-  const [friendId, setFriendId] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
-  const router = useRouter()
+  const [friendId, setFriendId] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
 
-  const handleAddFriend = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleAddFriend = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    if (!friendId.trim()) return
+    if (!friendId.trim()) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      const user = await fetchClient.GET("/users/me");
+      const userId = user.data?.id;
+      if (!userId) throw Error("Unable to get user id");
+
+      const result = await fetchClient.POST("/friendships", {
+        params: {
+          query: {
+            id1: userId,
+            id2: friendId,
+          },
+        },
+      });
+
+      if (!result.response.ok)
+        throw Error(
+          "An error occurred while sending the friend request: " + result.error
+        );
+
       toast({
         title: "Friend request sent",
-        description: "Your friend request has been sent successfully",
-      })
-      router.push("/chat")
-    }, 1500)
-  }
+        description: `Friend request sent to ${friendId}`,
+        variant: "default",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-md mx-auto">
@@ -47,7 +79,9 @@ export default function AddFriend() {
           </Link>
           <div>
             <CardTitle>Add a Friend</CardTitle>
-            <CardDescription>Send a friend request to another user</CardDescription>
+            <CardDescription>
+              Send a friend request to another user
+            </CardDescription>
           </div>
         </CardHeader>
         <form onSubmit={handleAddFriend}>
@@ -71,5 +105,5 @@ export default function AddFriend() {
         </form>
       </Card>
     </div>
-  )
+  );
 }
