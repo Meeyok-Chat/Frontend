@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/components/ui/use-toast"
 import { Heart, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { toast } from "react-toastify"
 
 type Note = {
   id: string
@@ -27,7 +27,6 @@ export function FriendsFeed() {
   const [isLoading, setIsLoading] = useState(true)
   const [newNote, setNewNote] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { toast } = useToast()
 
   useEffect(() => {
     // Simulate fetching notes
@@ -96,10 +95,7 @@ export function FriendsFeed() {
       setNewNote("")
       setIsSubmitting(false)
 
-      toast({
-        title: "Note posted",
-        description: "Your note has been posted to your friends feed",
-      })
+      toast("Your note has been posted to your friends feed", { type: "success" })
     }, 1000)
   }
 

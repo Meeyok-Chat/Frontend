@@ -3,11 +3,11 @@
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "react-toastify"
 
 interface FriendRequest {
   id: string
@@ -21,7 +21,6 @@ export default function PendingFriendRequests() {
     { id: "2", displayName: "JaneSmith", requestDate: "2025-04-19" },
   ])
   const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
   const router = useRouter()
 
   const handleAcceptRequest = (requestId: string) => {
@@ -31,10 +30,7 @@ export default function PendingFriendRequests() {
     setTimeout(() => {
       setPendingRequests((prev) => prev.filter((req) => req.id !== requestId))
       setIsLoading(false)
-      toast({
-        title: "Friend request accepted",
-        description: "You are now friends!",
-      })
+      toast("Friend request accepted", { type: "success" })
     }, 1000)
   }
 
@@ -45,10 +41,7 @@ export default function PendingFriendRequests() {
     setTimeout(() => {
       setPendingRequests((prev) => prev.filter((req) => req.id !== requestId))
       setIsLoading(false)
-      toast({
-        title: "Friend request rejected",
-        description: "The friend request has been declined.",
-      })
+      toast("The friend request has been declined.", { type: "info" })
     }, 1000)
   }
 

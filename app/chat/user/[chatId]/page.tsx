@@ -6,7 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Send } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -14,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { components } from "@/lib/api/schema";
 import { fetchClient } from "@/lib/api/client";
 import { useSocket } from "@/lib/websocket/context";
+import { toast } from "react-toastify";
 
 export const runtime = "edge";
 
@@ -44,7 +44,6 @@ export default function PrivateChat() {
     components["schemas"]["models.Chat"] | null
   >(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
 
   async function fetchChat() {
     const data = await fetchClient.GET(`/chats/{id}`, {
@@ -53,11 +52,7 @@ export default function PrivateChat() {
       },
     });
     if (!data || !data.data) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch chat data.",
-        variant: "destructive",
-      });
+      toast("Failed to fetch chat data.", { type: "error" });
       return null;
     }
     return data.data;

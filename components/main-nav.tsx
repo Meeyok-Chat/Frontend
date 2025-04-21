@@ -9,24 +9,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useToast } from "@/components/ui/use-toast"
 import { LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "./user-provider"
 import { signout } from "@/lib/auth"
+import { toast } from "react-toastify"
 
 export function MainNav() {
   const { user } = useUser()
   const router = useRouter()
-  const { toast } = useToast()
 
   const handleSignOut = async () => {
     await signout();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully",
-    })
+    toast("You have been signed out successfully", { type: "info" });
     router.push("/")
   }
 

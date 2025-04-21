@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { signup } from "@/lib/auth"
 import { fetchClient } from "@/lib/api/client"
 import { useSocket } from "@/lib/websocket/context"
+import { toast } from "react-toastify"
 
 export default function SignUp() {
   const [displayName, setDisplayName] = useState("")
@@ -19,7 +19,6 @@ export default function SignUp() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
   const router = useRouter()
 
   const { setConnectedUserId } = useSocket()
@@ -28,11 +27,7 @@ export default function SignUp() {
     e.preventDefault()
 
     if (password !== confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "Please make sure your passwords match.",
-        variant: "destructive",
-      })
+      toast("Password do not match", { type: "error" });
       return
     }
 

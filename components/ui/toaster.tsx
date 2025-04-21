@@ -1,5 +1,5 @@
 "use client"
-
+// DEPRECATED COMPONENT use react-toastify instead
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,

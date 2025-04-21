@@ -13,19 +13,18 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { signin } from "@/lib/auth";
 import { fetchClient } from "@/lib/api/client";
 import { useSocket } from "@/lib/websocket/context";
+import { toast } from "react-toastify";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const router = useRouter();
   const { setConnectedUserId } = useSocket();
 
@@ -41,10 +40,7 @@ export default function SignIn() {
       if (!userId) throw Error("Unable to get user id");
 
       setConnectedUserId(userId);
-      toast({
-        title: "Signed in successfully",
-        description: "Welcome back to Meeyok Chat!",
-      });
+      toast("Welcome to Meeyok Chat!", { type: "info" });
       router.push("/chat");
     } catch (error: any) {
       alert(error.message);

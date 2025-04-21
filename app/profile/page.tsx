@@ -6,17 +6,16 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { fetchClient } from "@/lib/api/client"
+import { toast } from "react-toastify"
 
 export default function Profile() {
   const [displayName, setDisplayName] = useState("Loading...")
   const [id, setId] = useState("Loading...")
   const [isLoading, setIsLoading] = useState(true)
-  const { toast } = useToast()
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -37,7 +36,10 @@ export default function Profile() {
 
     fetchUserProfile();
   }, [])
-
+  const copyIdToClipboard = () => {
+    navigator.clipboard.writeText(id);
+    toast("User ID copied to clipboard", { type: "info" });
+  }
   const handleUpdateProfile = async () => {
     setIsLoading(true)
     try {
@@ -94,14 +96,7 @@ export default function Profile() {
                 <Label htmlFor="status">User ID</Label>
                 <div className="flex flex-row items-center gap-4">
                   <div className="flex text-base" >{id}</div>
-                  <Button variant="outline" size="sm" onClick={() => {
-                    navigator.clipboard.writeText(id);
-                    alert("User ID copied to clipboard")
-                    // toast({
-                    //   title: "Copied",
-                    //   description: "User ID copied to clipboard",
-                    // })
-                  }}>
+                  <Button variant="outline" size="sm" onClick={copyIdToClipboard}>
                     Copy User ID
                   </Button>
                 </div>
