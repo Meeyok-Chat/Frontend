@@ -20,33 +20,10 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import { fetchClient } from "@/lib/api/client";
+import { useSocket } from "@/lib/websocket/context";
+import { components } from "@/lib/api/schema";
 
 export const runtime = "edge";
-
-// Mock data for group chat
-// const mockGroups = {
-//   group1: {
-//     id: "group1",
-//     name: "Project Team",
-//     avatar: "/placeholder.svg?height=40&width=40",
-//     members: [
-//       { id: "user1", name: "Alex Johnson" },
-//       { id: "user2", name: "Sam Wilson" },
-//       { id: "user3", name: "Taylor Smith" },
-//       { id: "me", name: "You" },
-//     ],
-//   },
-//   group2: {
-//     id: "group2",
-//     name: "Friends Chat",
-//     avatar: "/placeholder.svg?height=40&width=40",
-//     members: [
-//       { id: "user2", name: "Sam Wilson" },
-//       { id: "user3", name: "Taylor Smith" },
-//       { id: "me", name: "You" },
-//     ],
-//   },
-// };
 
 type Message = {
   id: string;
@@ -61,10 +38,60 @@ export default function GroupChat() {
   const groupId = params.groupId as string;
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [group, setGroup] = useState<any>(null);
+  const [group, setGroup] = useState<
+    components["schemas"]["models.Chat"] | null
+  >(null);
   const [showMembers, setShowMembers] = useState(false);
   const [showAddMembers, setShowAddMembers] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [myUser, setMyUser] = useState<
+    components["schemas"]["models.User"] | null
+  >(null);
+  const [memberDatas, setMemberDatas] = useState<
+    components["schemas"]["models.User"][]
+  >([]);
+  const [friendlistDatas, setFriendlistDatas] = useState<
+    components["schemas"]["models.User"][]
+  >([]);
+
+  async function fetchAllUsers() {
+    const data = await fetchClient.GET("/users/me");
+    if (!data || !data.data) {
+      console.log("Error fetching user data");
+      return null;
+    }
+    setMyUser(data.data);
+
+    const allUserDatas = await Promise.all(
+      group?.users?.map(async (member) => {
+        const user = await fetchClient.GET(`/users/{id}`, {
+          params: {
+            path: { id: member },
+          },
+        });
+        if (!user || !user.data) {
+          console.log("Error fetching user data");
+          return null;
+        }
+        return user.data;
+      }) || []
+    );
+
+    setMemberDatas(allUserDatas.filter((user) => user !== null));
+  }
+
+  async function fetchFriendlist() {
+    const data = await fetchClient.GET("/friendships/{status}", {
+      params: {
+        path: { status: "accept" },
+      },
+    });
+    if (!data || !data.data) {
+      console.log("Error fetching user data");
+      return null;
+    }
+    setFriendlistDatas(data.data);
+  }
 
   // Fetching group data
   useEffect(() => {
@@ -78,15 +105,16 @@ export default function GroupChat() {
         });
 
         const groups = groupsRes.data || [];
-        const currentGroup = groups.find((g: any) => g.id === groupId);
+        const currentGroup = groups.find((g) => g.id === groupId);
 
         if (!currentGroup) {
           console.warn("Group not found");
           setGroup({
             id: groupId,
             name: "Unknown Group",
-            avatar: "/placeholder.svg?height=40&width=40",
-            members: [{ id: "me", name: "You" }],
+            messages: [],
+            type: "Group",
+            users: [],
           });
           return;
         }
@@ -117,7 +145,10 @@ export default function GroupChat() {
     };
 
     if (groupId) {
-      fetchGroupData();
+      fetchGroupData().then(() => {
+        fetchAllUsers();
+        fetchFriendlist();
+      });
     }
   }, [groupId]);
 
@@ -126,6 +157,7 @@ export default function GroupChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const { sendJsonMessage, lastJsonMessage } = useSocket();
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -140,26 +172,66 @@ export default function GroupChat() {
     };
 
     setMessages([...messages, message]);
+    sendJsonMessage({
+      type: EventType.EVENT_SEND_MESSAGE,
+      payload: {
+        chat_id: groupId,
+        message: newMessage,
+        from: myUser?.id || "", // should not be empty string
+        createAt: new Date().toISOString(),
+      },
+    });
     setNewMessage("");
-
-    // TODO: Simulate receiving a response
-    setTimeout(() => {
-      const randomMember = group.members.find((m: any) => m.id !== "me");
-      if (randomMember) {
-        const response: Message = {
-          id: (Date.now() + 1).toString(),
-          senderId: randomMember.id,
-          senderName: randomMember.name,
-          text: "Thanks for your message!",
-          timestamp: new Date(),
-        };
-
-        setMessages((prev) => [...prev, response]);
-      }
-    }, 2000);
   };
 
-  if (!group) {
+  useEffect(() => {
+    if (!lastJsonMessage) return;
+
+    if (lastJsonMessage.type === EventType.EVENT_NEW_MESSAGE) {
+      if (lastJsonMessage.payload.chat_id !== groupId) return;
+
+      const newMessage: Message = {
+        id: messages.length.toString(),
+        senderId: lastJsonMessage.payload.from,
+        senderName:
+          memberDatas.find(
+            (member) => member.id === lastJsonMessage.payload.from
+          )?.username || "Unknown",
+        text: lastJsonMessage.payload.message,
+        timestamp: new Date(lastJsonMessage.payload.createAt),
+      };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    }
+  }, [lastJsonMessage]);
+
+  // add friend to group
+  const handleAddMember = async (userId: string) => {
+    if (!group) return;
+
+    const res = await fetchClient.POST("/chats/{id}/users", {
+      params: {
+        path: { id: groupId },
+      },
+      body: {},
+    });
+
+    if (!res || !res.data || res.response.status !== 200) {
+      console.log("Error adding member to group");
+      return;
+    } else {
+      const addedMember = friendlistDatas.find((user) => user.id === userId);
+      if (!addedMember) {
+        console.log("Error finding added member in friend list");
+        return;
+      }
+      setMemberDatas((prevMembers) => [
+        ...prevMembers,
+        addedMember
+      ]);
+    }
+  };
+
+  if (!group || !memberDatas) {
     return <div>Loading...</div>;
   }
 
@@ -173,13 +245,10 @@ export default function GroupChat() {
             </Button>
           </Link>
           <Avatar>
-            <AvatarImage
-              src={group.avatar || "/placeholder.svg"}
-              alt={group.name}
-            />
-            <AvatarFallback>{group.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={"/placeholder.svg"} alt={group?.name} />
+            <AvatarFallback>{group?.name?.charAt(0)}</AvatarFallback>
           </Avatar>
-          <CardTitle className="flex-1">{group.name}</CardTitle>
+          <CardTitle className="flex-1">{group?.name}</CardTitle>
           <Button
             variant="ghost"
             size="icon"
@@ -196,17 +265,19 @@ export default function GroupChat() {
               <div
                 key={message.id}
                 className={`flex ${
-                  message.senderId === "me" ? "justify-end" : "justify-start"
+                  message.senderId === myUser?.id
+                    ? "justify-end"
+                    : "justify-start"
                 }`}
               >
                 <div
                   className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    message.senderId === "me"
+                    message.senderId === myUser?.id
                       ? "bg-slate-800 text-white"
                       : "bg-slate-200 text-slate-900"
                   }`}
                 >
-                  {message.senderId !== "me" && (
+                  {message.senderId !== myUser?.id && (
                     <p className="text-xs font-medium mb-1">
                       {message.senderName}
                     </p>
@@ -229,7 +300,7 @@ export default function GroupChat() {
               <DrawerContent>
                 <DrawerHeader>
                   <DrawerTitle>
-                    Group Members ({group.members.length})
+                    Group Members ({memberDatas.length})
                   </DrawerTitle>
                   <DrawerDescription>
                     People in this conversation
@@ -237,7 +308,7 @@ export default function GroupChat() {
                 </DrawerHeader>
                 <div className="px-4 py-2">
                   <ul className="space-y-4">
-                    {group.members.map((member: any) => (
+                    {memberDatas.map((member: any) => (
                       <li key={member.id} className="flex items-center gap-3">
                         <Avatar>
                           <AvatarImage
@@ -288,23 +359,7 @@ export default function GroupChat() {
                 <div className="px-4 py-2">
                   <Input placeholder="Search users..." className="mb-4" />
                   <ul className="space-y-4">
-                    {[
-                      {
-                        id: "user4",
-                        name: "Jordan Lee",
-                        avatar: "/placeholder.svg?height=40&width=40",
-                      },
-                      {
-                        id: "user5",
-                        name: "Casey Brown",
-                        avatar: "/placeholder.svg?height=40&width=40",
-                      },
-                      {
-                        id: "user6",
-                        name: "Riley Green",
-                        avatar: "/placeholder.svg?height=40&width=40",
-                      },
-                    ].map((user) => (
+                    {friendlistDatas.map((user) => (
                       <li
                         key={user.id}
                         className="flex items-center justify-between"
@@ -312,16 +367,16 @@ export default function GroupChat() {
                         <div className="flex items-center gap-3">
                           <Avatar>
                             <AvatarImage
-                              src={user.avatar || "/placeholder.svg"}
-                              alt={user.name}
+                              src={"/placeholder.svg"}
+                              alt={user.username}
                             />
                             <AvatarFallback>
-                              {user.name.charAt(0)}
+                              {user.username?.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
-                          <span>{user.name}</span>
+                          <span>{user.username}</span>
                         </div>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => handleAddMember(user.id || "")}>
                           Add
                         </Button>
                       </li>
