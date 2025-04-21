@@ -44,9 +44,6 @@ export default function SignUp() {
       const userId = user.data?.id;
       if (!userId) throw Error("Unable to get user id");
 
-      console.log("payload", {
-        username: displayName,
-      })
       const result = await fetchClient.PATCH("/users/{id}/username", {
         params: {
           path: { id: userId }

@@ -2,13 +2,10 @@
 
 import type React from "react"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -41,18 +38,24 @@ export default function Profile() {
     fetchUserProfile();
   }, [])
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleUpdateProfile = async () => {
     setIsLoading(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully",
+    try {
+      const result = await fetchClient.PATCH("/users/{id}/username", {
+        params: {
+          path: { id }
+        },
+        body: {
+          username: displayName,
+        }
       })
-    }, 1500)
+      if (!result.response.ok) throw Error("An error occured while trying to set username: " + result.error);
+    } catch (err: any) {
+      alert(err.message);
+      console.error('Error while editing profile', err);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -92,11 +95,12 @@ export default function Profile() {
                 <div className="flex flex-row items-center gap-4">
                   <div className="flex text-base" >{id}</div>
                   <Button variant="outline" size="sm" onClick={() => {
-                    // navigator.clipboard.writeText(id)
-                    toast({
-                      title: "Copied",
-                      description: "User ID copied to clipboard",
-                    })
+                    navigator.clipboard.writeText(id);
+                    alert("User ID copied to clipboard")
+                    // toast({
+                    //   title: "Copied",
+                    //   description: "User ID copied to clipboard",
+                    // })
                   }}>
                     Copy User ID
                   </Button>
@@ -112,7 +116,7 @@ export default function Profile() {
               </div> */}
             </CardContent>
             <CardFooter className="border-t p-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" onClick={handleUpdateProfile} disabled={isLoading}>
                 {isLoading ? "Updating..." : "Update Profile"}
               </Button>
             </CardFooter>
