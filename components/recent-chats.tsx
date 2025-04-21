@@ -1,78 +1,76 @@
-"use client"
+"use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Link from "next/link"
-import { useEffect, useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { fetchClient } from "@/lib/api/client";
+import { components } from "@/lib/api/schema";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type ChatPreview = {
-  id: string
-  type: "private" | "group"
-  name: string
-  avatar: string
-  lastMessage: string
-  timestamp: Date
-  unread: number
-}
+  id: string;
+  type: "Individual" | "Group";
+  name: string;
+  avatar: string;
+  lastMessage: string;
+  timestamp: Date;
+  unread: number;
+};
 
 export function RecentChats() {
-  const [chats, setChats] = useState<ChatPreview[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [chats, setChats] = useState<ChatPreview[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  async function fetchRecentChats() {
+    const data = await fetchClient.GET("/chats");
+    const user = await fetchClient.GET("/users/me");
+
+    if (!data || !data.data || !user || !user.data) {
+      console.error("Error fetching recent chats or user data");
+      return [];
+    }
+    const userId = user.data.id as string;
+    const recentChats: ChatPreview[] = data.data
+      .filter((chat: components["schemas"]["models.Chat"]) => {
+        return chat.users?.includes(userId);
+      })
+      .map((chat: components["schemas"]["models.Chat"]) => {
+        const lastMessage = chat.messages?.[0] || null;
+        const mapValue: ChatPreview = {
+          id: chat.id || "", // should not be empty string
+          type: chat.type as "Individual" | "Group",
+          name: chat.name || "Chat",
+          avatar: "/placeholder.svg",
+          lastMessage: lastMessage?.message || "",
+          timestamp: new Date(chat.updatedAt || Date.now()),
+          unread: 0, // Assume 0 unread (not implement)
+        };
+        return mapValue;
+      });
+    return recentChats;
+  }
 
   useEffect(() => {
-    // Simulate fetching recent chats
-    setTimeout(() => {
-      const mockChats: ChatPreview[] = [
-        {
-          id: "user1",
-          type: "private",
-          name: "Alex Johnson",
-          avatar: "/placeholder.svg?height=40&width=40",
-          lastMessage: "Hey, how are you doing?",
-          timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-          unread: 2,
-        },
-        {
-          id: "group1",
-          type: "group",
-          name: "Project Team",
-          avatar: "/placeholder.svg?height=40&width=40",
-          lastMessage: "Meeting at 3pm tomorrow",
-          timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-          unread: 0,
-        },
-        {
-          id: "user2",
-          type: "private",
-          name: "Sam Wilson",
-          avatar: "/placeholder.svg?height=40&width=40",
-          lastMessage: "Thanks for your help!",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-          unread: 0,
-        },
-        {
-          id: "group2",
-          type: "group",
-          name: "Friends Chat",
-          avatar: "/placeholder.svg?height=40&width=40",
-          lastMessage: "Who's up for dinner tonight?",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-          unread: 3,
-        },
-      ]
-
-      setChats(mockChats)
-      setIsLoading(false)
-    }, 1000)
-  }, [])
+    setIsLoading(true);
+    fetchRecentChats()
+      .then((data) => {
+        setChats(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching recent chats:", error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
 
   if (isLoading) {
     return (
       <div className="flex justify-center py-4">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-500 border-t-transparent" />
       </div>
-    )
+    );
   }
 
   if (chats.length === 0) {
@@ -85,19 +83,29 @@ export function RecentChats() {
           </Button>
         </Link>
       </div>
-    )
+    );
   }
 
   return (
     <ScrollArea className="h-[400px]">
       <div className="space-y-2">
         {chats.map((chat) => (
-          <Link key={chat.id} href={chat.type === "private" ? `/chat/user/${chat.id}` : `/chat/group/${chat.id}`}>
+          <Link
+            key={chat.id}
+            href={
+              chat.type === "Individual"
+                ? `/chat/user/${chat.id}`
+                : `/chat/group/${chat.id}`
+            }
+          >
             <Button variant="ghost" className="w-full justify-start p-3 h-auto">
               <div className="flex items-center gap-3 w-full">
                 <div className="relative">
                   <Avatar>
-                    <AvatarImage src={chat.avatar || "/placeholder.svg"} alt={chat.name} />
+                    <AvatarImage
+                      src={chat.avatar || "/placeholder.svg"}
+                      alt={chat.name}
+                    />
                     <AvatarFallback>{chat.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   {chat.unread > 0 && (
@@ -110,10 +118,15 @@ export function RecentChats() {
                   <div className="flex items-center justify-between">
                     <p className="font-medium truncate">{chat.name}</p>
                     <p className="text-xs text-slate-500">
-                      {chat.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {chat.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </p>
                   </div>
-                  <p className="text-sm text-slate-500 truncate">{chat.lastMessage}</p>
+                  <p className="text-sm text-slate-500 truncate">
+                    {chat.lastMessage}
+                  </p>
                 </div>
               </div>
             </Button>
@@ -121,5 +134,5 @@ export function RecentChats() {
         ))}
       </div>
     </ScrollArea>
-  )
+  );
 }
