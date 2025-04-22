@@ -130,7 +130,7 @@ export default function PrivateChat() {
       isRead: false,
     };
 
-    setMessages([...messages, message]);
+    setMessages(prev => [...prev, message]);
     sendJsonMessage({
       type: EventType.EVENT_SEND_MESSAGE,
       payload: {

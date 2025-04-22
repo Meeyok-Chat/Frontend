@@ -59,8 +59,7 @@ export default function GroupChat() {
     }
     setMyUser(data.data);
 
-    if (!group?.users) return;
-
+    if (!group || !group.users ) return;
     try {
       const allMemberResponses = await Promise.all(
         group.users.map((memberId) =>
@@ -73,11 +72,37 @@ export default function GroupChat() {
       const validMembers = allMemberResponses
         .map((res) => res?.data)
         .filter((user): user is NonNullable<typeof user> => !!user);
-      console.log("Fetched members:", validMembers);
       setMemberDatas(validMembers);
     } catch (error) {
       console.error("Error fetching member data:", error);
     }
+  }
+
+  async function fetchMessages() {
+    // Fetch chat history
+    const chatRes = await fetchClient.GET("/chats/{id}", {
+      params: {
+        path: { id: groupId },
+      },
+    });
+    
+    const fetchedMessages: Message[] =
+      chatRes.data?.messages?.map(
+        (msg: components["schemas"]["models.Message"]) => {
+          {
+            const sender = memberDatas.find((m) => m.id === msg.from);
+            return {
+              id: msg.id || "",
+              senderId: msg.from || "",
+              senderName: sender?.username || "Unknown",
+              text: msg.message || "",
+              timestamp: new Date(msg.createAt || Date.now()),
+            };
+          }
+        }
+      ) || [];
+
+    setMessages(fetchedMessages);
   }
 
   // Fetching group data
@@ -107,40 +132,25 @@ export default function GroupChat() {
         }
 
         setGroup(currentGroup);
-
-        // Fetch chat history
-        const chatRes = await fetchClient.GET("/chats/{id}", {
-          params: {
-            path: { id: groupId },
-          },
-        });
-        console.log("Fetched chat history:", chatRes.data);
-        const fetchedMessages = Array.isArray(chatRes.data)
-          ? chatRes.data.map((msg: any) => ({
-              id: msg.id,
-              senderId: msg.senderId,
-              senderName: msg.senderName,
-              text: msg.text,
-              timestamp: new Date(msg.timestamp || Date.now()),
-            }))
-          : [];
-
-        setMessages(fetchedMessages);
       } catch (error) {
         console.error("Error fetching group or chat history:", error);
       }
     };
 
     if (groupId) {
-      fetchGroupData();
+      fetchGroupData()
     }
   }, [groupId]);
 
   useEffect(() => {
-    if (group) {
-      fetchAllUsers();
-    }
+    if (!group) return;
+    fetchAllUsers();
   }, [group]);
+
+  useEffect(() => {
+    if (!memberDatas) return;
+    fetchMessages();
+  }, [memberDatas]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -161,7 +171,7 @@ export default function GroupChat() {
       timestamp: new Date(),
     };
 
-    setMessages([...messages, message]);
+    setMessages((prev) => [...prev, message]);
     sendJsonMessage({
       type: EventType.EVENT_SEND_MESSAGE,
       payload: {
