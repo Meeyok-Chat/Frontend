@@ -84,10 +84,10 @@ export function FriendsList() {
                       }`}
                   />
                 </div> */}
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 flex flex-row items-center gap-4 overflow-hidden">
                   <p className="truncate">{friend.username}</p>
                   <p className="text-xs text-slate-500">
-                    {friend.status === "online" ? "Online" : "Offline"}
+                    {friend.status === "online" ? "(Online)" : "(Offline)"}
                   </p>
                 </div>
               </div>
