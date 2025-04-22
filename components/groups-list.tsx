@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { fetchClient } from "@/lib/api/client";
 import { useSocket } from "@/lib/websocket/context";
 import { EventType, NewGroupEvent } from "@/lib/websocket/type";
+import { components } from "@/lib/api/schema";
 
 type Group = {
   id: string;
@@ -31,11 +32,11 @@ export function GroupsList() {
           throw new Error(response.error.message);
         }
 
-        const formattedGroups = response.data.filter(group => group.type?.toLowerCase() === "group").map((group: any) => ({
-          id: group.id,
-          name: group.name,
-          memberCount: group.memberCount,
-          lastActive: new Date(group.updatedAt),
+        const formattedGroups = response.data.filter(group => group.type?.toLowerCase() === "group").map((group: components["schemas"]["models.Chat"]) => ({
+          id: group.id || "",
+          name: group.name || "",
+          memberCount: group.users?.length || 0,
+          lastActive: new Date(group.updatedAt || Date.now()),
         }));
         formattedGroups.sort((a: any, b: any) => b.lastActive.getTime() - a.lastActive.getTime());
         setGroups(formattedGroups);

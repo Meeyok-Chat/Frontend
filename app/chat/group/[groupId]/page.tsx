@@ -80,27 +80,21 @@ export default function GroupChat() {
 
   async function fetchMessages() {
     // Fetch chat history
-    const chatRes = await fetchClient.GET("/chats/{id}", {
-      params: {
-        path: { id: groupId },
-      },
-    });
+    if (!group) return;
 
     const fetchedMessages: Message[] =
-      chatRes.data?.messages?.map(
-        (msg: components["schemas"]["models.Message"]) => {
-          {
-            const sender = memberDatas.find((m) => m.id === msg.from);
-            return {
-              id: msg.id || "",
-              senderId: msg.from || "",
-              senderName: sender?.username || "Unknown",
-              text: msg.message || "",
-              timestamp: new Date(msg.createAt || Date.now()),
-            };
-          }
+      group.messages?.map((msg: components["schemas"]["models.Message"]) => {
+        {
+          const sender = memberDatas.find((m) => m.id === msg.from);
+          return {
+            id: msg.id || "",
+            senderId: msg.from || "",
+            senderName: sender?.username || "Unknown",
+            text: msg.message || "",
+            timestamp: new Date(msg.createAt || Date.now()),
+          };
         }
-      ) || [];
+      }) || [];
 
     setMessages(fetchedMessages);
   }
@@ -162,12 +156,12 @@ export default function GroupChat() {
   useEffect(() => {
     if (!group) return;
     fetchAllUsers();
-    maybeAddUserToGroup();
   }, [group]);
 
   useEffect(() => {
     if (!memberDatas) return;
     fetchMessages();
+    maybeAddUserToGroup();
   }, [memberDatas]);
 
   // Scroll to bottom when messages change
@@ -202,6 +196,32 @@ export default function GroupChat() {
     setNewMessage("");
   };
 
+  async function appendMessage(messageEvent: WSMessageEvent) {
+    const isKnownSender = memberDatas.some(
+      (member) => member.id === messageEvent.from
+    );
+
+    if (!isKnownSender) {
+      await fetchAllUsers();
+    }
+    const newMessage: Message = {
+      id: messages.length.toString(),
+      senderId: messageEvent.from,
+      senderName:
+        memberDatas.find((member) => member.id === messageEvent.from)?.username ||
+        "Unknown",
+      text: messageEvent.message,
+      timestamp: new Date(messageEvent.createAt),
+    };
+
+    const isDuplicate = messages.some(
+      (msg) =>
+        msg.senderId === newMessage.senderId && msg.text === newMessage.text
+    );
+    if (isDuplicate) return;
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  }
+
   useEffect(() => {
     if (!lastJsonMessage) return;
 
@@ -209,22 +229,7 @@ export default function GroupChat() {
       const payload = lastJsonMessage.payload as WSMessageEvent;
       if (payload.chat_id !== groupId) return;
 
-      const newMessage: Message = {
-        id: messages.length.toString(),
-        senderId: payload.from,
-        senderName:
-          memberDatas.find((member) => member.id === payload.from)?.username ||
-          "Unknown",
-        text: payload.message,
-        timestamp: new Date(payload.createAt),
-      };
-
-      const isDuplicate = messages.some(
-        (msg) =>
-          msg.senderId === newMessage.senderId && msg.text === newMessage.text
-      );
-      if (isDuplicate) return;
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      appendMessage(payload);
     }
   }, [lastJsonMessage]);
 
@@ -305,14 +310,14 @@ export default function GroupChat() {
                 </DrawerHeader>
                 <div className="px-4 py-2">
                   <ul className="space-y-4">
-                    {memberDatas.map((member: any) => (
+                    {memberDatas.map((member) => (
                       <li key={member.id} className="flex items-center gap-3">
                         <Avatar>
                           <AvatarImage
                             src="/placeholder.svg?height=40&width=40"
-                            alt={member.name}
+                            alt={member.username}
                           />
-                          <AvatarFallback>{member.name}</AvatarFallback>
+                          <AvatarFallback>{member.username}</AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">{member.username}</p>
