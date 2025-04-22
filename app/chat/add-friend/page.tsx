@@ -37,10 +37,9 @@ export default function AddFriend() {
       const userId = user.data?.id;
       if (!userId) throw Error("Unable to get user id");
 
-      const result = await fetchClient.POST("/friendships", {
+      const result = await fetchClient.POST("/friendships/{id}", {
         params: {
-          query: {
-            // TODO: Update type to match backend latest swagger 
+          path: {
             id: friendId
           },
         },
@@ -48,7 +47,7 @@ export default function AddFriend() {
 
       if (!result.response.ok)
         throw Error(
-          "An error occurred while sending the friend request: " + result.error?.message
+          "An error occurred while sending the friend request: " + (result.error)
         );
 
       toast(`Friend request sent.`, { type: "success" });
