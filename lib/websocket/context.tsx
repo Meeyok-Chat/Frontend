@@ -3,13 +3,16 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { ReactNode } from "react";
 import { fetchClient } from "@/lib/api/client";
 import useWebSocket from "react-use-websocket";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 // context type
 interface SocketContextProps {
-  setConnectedUserId: (userId: string) => void;
   sendJsonMessage: (message: WebSocketEvent) => void;
   lastJsonMessage: WebSocketEvent | null;
   readyState: number;
+  connectWebsocket: () => void;
+  disconnectWebsocket: () => void;
 }
 
 const SocketContext = createContext<SocketContextProps | null>(null);
@@ -48,15 +51,6 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       isEnableWs
     );
 
-  function cleanup() {
-    const socket = getWebSocket();
-    if (socket) {
-      socket.close();
-    }
-    setIsEnableWs(false);
-    setConnectedUserId(null);
-  }
-
   async function initWs() {
     const res = await fetchClient.GET("/ws/init");
 
@@ -70,27 +64,51 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     setIsEnableWs(true);
   }
 
-  useEffect(() => {
-    if (!connectedUserId) {
-      cleanup();
+  async function connectWebsocket() {
+    const res = await fetchClient.GET("/users/me");
+    if (!res.response.ok) {
+      console.error("Unauthorized access, please sign in again.");
       return;
     }
+    const userId = res.data?.id;
+    if (!userId) throw Error("This should not happen, unable to get user id");
+    setConnectedUserId(userId);
 
-    // Send /ws/init
     initWs();
+  }
+
+  async function disconnectWebsocket() {
+    const socket = getWebSocket();
+    if (socket) {
+      socket.close();
+    }
+    setIsEnableWs(false);
+    setConnectedUserId(null);
+  }
+
+  useEffect(() => {
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        connectWebsocket();
+      } else {
+        disconnectWebsocket();
+      }
+    })
 
     return () => {
-      cleanup();
+      disconnectWebsocket();
     };
-  }, [connectedUserId]);
+  }, []);
 
   return (
     <SocketContext.Provider
       value={{
-        setConnectedUserId,
         sendJsonMessage,
         lastJsonMessage,
         readyState,
+        connectWebsocket,
+        disconnectWebsocket,
       }}
     >
       {children}

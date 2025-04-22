@@ -13,13 +13,14 @@ import { LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "./user-provider"
-import { signout } from "@/lib/auth"
 import { toast } from "react-toastify"
 import { Skeleton } from "./ui/skeleton"
+import { useAuth } from "@/lib/auth"
 
 export function MainNav() {
   const { user, loading } = useUser()
   const router = useRouter()
+  const { signout } = useAuth()
 
   const handleSignOut = async () => {
     await signout();

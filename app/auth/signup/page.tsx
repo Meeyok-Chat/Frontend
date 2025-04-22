@@ -8,10 +8,10 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { signup } from "@/lib/auth"
 import { fetchClient } from "@/lib/api/client"
 import { useSocket } from "@/lib/websocket/context"
 import { toast } from "react-toastify"
+import { useAuth } from "@/lib/auth"
 
 export default function SignUp() {
   const [displayName, setDisplayName] = useState("")
@@ -20,8 +20,7 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-
-  const { setConnectedUserId } = useSocket()
+  const { signup } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,7 +49,6 @@ export default function SignUp() {
       if (!result.response.ok) throw Error("An error occured while trying to set username: " + result.error);
       console.log("changed user name", result.data)
 
-      setConnectedUserId(userId);
       router.push("/chat")
     } catch (err: any) {
       toast(err.message, { type: "error" });
