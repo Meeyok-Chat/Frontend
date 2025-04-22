@@ -21,22 +21,20 @@ export function GroupsList() {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await fetchClient.GET("/chats/user/{type}", {
-          params: {
-            path: { type: "group" },
-          },
-        });
-        console.log('data', response.data)
-        if (response.data) {
-          console.log(response.data);
-          const formattedGroups = response.data.map((group: any) => ({
-            id: group.id,
-            name: group.name,
-            memberCount: group.memberCount,
-            lastActive: new Date(group.updatedAt),
-          }));
-          setGroups(formattedGroups);
+        const response = await fetchClient.GET("/chats");
+
+        if (!response.data) {
+          throw new Error(response.error.message);
         }
+
+        const formattedGroups = response.data.filter(group => group.type?.toLowerCase() === "group").map((group: any) => ({
+          id: group.id,
+          name: group.name,
+          memberCount: group.memberCount,
+          lastActive: new Date(group.updatedAt),
+        }));
+        formattedGroups.sort((a: any, b: any) => b.lastActive.getTime() - a.lastActive.getTime());
+        setGroups(formattedGroups);
       } catch (error) {
         console.error("Failed to fetch groups:", error);
       } finally {
