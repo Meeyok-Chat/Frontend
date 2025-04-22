@@ -3,14 +3,16 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { fetchClient } from "@/lib/api/client"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { toast } from "react-toastify"
 
 type OnlineUser = {
   id: string
-  name: string
-  avatar: string
-  status: "online" | "away" | "offline"
+  username: string
+  // avatar: string
+  // status: "online" | "away" | "offline"
 }
 
 export function OnlineUsersList() {
@@ -18,19 +20,20 @@ export function OnlineUsersList() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate fetching online users
-    setTimeout(() => {
-      const mockUsers: OnlineUser[] = [
-        { id: "user1", name: "Alex Johnson", avatar: "/placeholder.svg?height=40&width=40", status: "online" },
-        { id: "user2", name: "Sam Wilson", avatar: "/placeholder.svg?height=40&width=40", status: "online" },
-        { id: "user3", name: "Taylor Smith", avatar: "/placeholder.svg?height=40&width=40", status: "away" },
-        { id: "user4", name: "Jordan Lee", avatar: "/placeholder.svg?height=40&width=40", status: "online" },
-        { id: "user5", name: "Casey Brown", avatar: "/placeholder.svg?height=40&width=40", status: "online" },
-      ]
+    async function fetchUsers() {
+      setIsLoading(true);
+      try {
+        const resp = await fetchClient.GET("/ws/clients");
+        if (!resp.data) throw new Error(resp.error.message);
 
-      setOnlineUsers(mockUsers)
-      setIsLoading(false)
-    }, 1000)
+        setOnlineUsers(resp.data.users)
+      } catch (err: any) {
+        toast(`Error: ${err.message}`, { type: "error" });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchUsers();
   }, [])
 
   if (isLoading) {
@@ -52,22 +55,7 @@ export function OnlineUsersList() {
           <Link key={user.id} href={`/chat/user/${user.id}`}>
             <Button variant="ghost" className="w-full justify-start p-2 h-auto">
               <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Avatar>
-                    <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span
-                    className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ring-1 ring-white ${
-                      user.status === "online"
-                        ? "bg-green-500"
-                        : user.status === "away"
-                          ? "bg-yellow-500"
-                          : "bg-slate-300"
-                    }`}
-                  />
-                </div>
-                <span>{user.name}</span>
+                <span>{user.username}</span>
               </div>
             </Button>
           </Link>
