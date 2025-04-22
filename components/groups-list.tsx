@@ -119,7 +119,7 @@ export function GroupsList() {
                       {group.lastActive.toLocaleDateString()}
                     </p>
                   </div>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-slate-500 w-fit">
                     {group.memberCount} members
                   </p>
                 </div>
