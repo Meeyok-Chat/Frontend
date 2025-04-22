@@ -1,9 +1,9 @@
 export enum EventType {
   EVENT_SEND_MESSAGE = "send_message",
   EVENT_NEW_MESSAGE = "new_message",
-  EVENT_NEW_GROUP = "new_group",
   EVENT_NEW_USER = "new_user",
-  EVENT_LEAVE_USER = "leave_user"
+  EVENT_LEAVE_USER = "leave_user",
+  EVENT_NEW_GROUP = "new_group"
 }
 
 export type WSMessageEvent = {
@@ -23,5 +23,5 @@ export type NewGroupEvent = {
 
 export type WebSocketEvent = {
   type: EventType;
-  payload: WSMessageEvent;
+  payload: WSMessageEvent | NewUserStatusEvent | NewGroupEvent;
 };

@@ -77,7 +77,7 @@ export default function NewChat() {
       const resp = await fetchClient.GET("/chats");
       if(!resp.data) throw new Error(resp.error.message)
 
-      const existingChat = resp.data.find(chat => chat.type !== "group" && chat.users?.includes(userId));
+      const existingChat = resp.data.find(chat => chat.type?.toLowerCase() !== "group" && chat.users?.includes(userId));
       if (existingChat) {
         router.push(`/chat/user/${existingChat.id}`);
         return;
