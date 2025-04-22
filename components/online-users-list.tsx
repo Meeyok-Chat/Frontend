@@ -120,7 +120,8 @@ export function OnlineUsersList() {
         {onlineUsers.map((user) => (
           <Link key={user.id} href={`/chat/new?q=${user.username}`}>
             <Button variant="ghost" className="w-full justify-start p-2 h-auto">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="flex flex-shrink-0 w-2 h-2 rounded-full bg-green-500"/>
                 <span>{user.username}</span>
               </div>
             </Button>
