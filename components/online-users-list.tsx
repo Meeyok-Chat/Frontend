@@ -30,6 +30,19 @@ export function OnlineUsersList() {
         const resp = await fetchClient.GET("/ws/clients");
         if (!resp.data) throw new Error(resp.error.message);
 
+        const users = await fetchClient.GET("/users");
+        if (!users.data) throw new Error(users.error.message);
+
+        resp.data.users.forEach((user: any) => {
+          const userData = users.data.find(
+            (u: any) => u.id === user.id
+          ) as any;
+          if (userData)
+            user.username = userData.username;
+          else
+            console.error(`User with id ${user.id} not found in users data`);
+        });
+
         setOnlineUsers(resp.data.users);
       } catch (err: any) {
         toast(`Error: ${err.message}`, { type: "error" });
