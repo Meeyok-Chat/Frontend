@@ -50,6 +50,7 @@ export default function NewChat() {
     const fetchUsers = async () => {
       try {
         const res = await fetchClient.GET("/users");
+        // console.log("Fetched users:", res.data);
         setUsers(
           (res.data || []).map((user: any) => ({
             id: user.id,
@@ -70,23 +71,25 @@ export default function NewChat() {
   );
 
   // TODO: This doesn't work ???
-  const handleStartChat = async (userId: string) => {
+  const handleStartChat = async (userId: string, username: string) => {
     try {
+      console.log("Starting chat with user:", userId, username);
       const chatPayload = {
-        name: "New Chat",
-        type: "private",
-        updatedAt: new Date().toISOString(),
+        name: username,
+        type: "Individual",
         users: [userId, currentUserId],
-        messages: [],
       };
 
       const res = await fetchClient.POST("/chats", {
         body: chatPayload,
       });
-      toast("Chat started. You can now start messaging", { type: "info" });
+      console.log("Chat created:", res.data);
+      toast("Chat started. You can now start messaging", { type: "success" });
+      // TODO: response should contain chat ID
       if (res.data?.id) {
-        router.push(`/chat/${res.data.id}`);
+        router.push(`/chat/user/${res.data.id}`);
       } else {
+        // console.error("Failed to retrieve chat ID from response:", res.data);
         toast("Failed to retrieve chat ID", { type: "error" });
       }
     } catch (error) {
@@ -125,7 +128,7 @@ export default function NewChat() {
                     <Button
                       variant="ghost"
                       className="w-full justify-start p-2 h-auto"
-                      onClick={() => handleStartChat(user.id)}
+                      onClick={() => handleStartChat(user.id, user.name)}
                     >
                       <div className="flex items-center gap-3">
                         <div className="relative">

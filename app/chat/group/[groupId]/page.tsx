@@ -226,10 +226,7 @@ export default function GroupChat() {
         console.log("Error finding added member in friend list");
         return;
       }
-      setMemberDatas((prevMembers) => [
-        ...prevMembers,
-        addedMember
-      ]);
+      setMemberDatas((prevMembers) => [...prevMembers, addedMember]);
     }
   };
 
@@ -378,7 +375,11 @@ export default function GroupChat() {
                           </Avatar>
                           <span>{user.username}</span>
                         </div>
-                        <Button size="sm" variant="outline" onClick={() => handleAddMember(user.id || "")}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleAddMember(user.id || "")}
+                        >
                           Add
                         </Button>
                       </li>
