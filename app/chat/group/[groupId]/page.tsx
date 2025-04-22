@@ -22,6 +22,7 @@ import {
 import { fetchClient } from "@/lib/api/client";
 import { useSocket } from "@/lib/websocket/context";
 import { components } from "@/lib/api/schema";
+import { EventType } from "@/lib/websocket/type";
 
 export const runtime = "edge";
 
@@ -83,7 +84,7 @@ export default function GroupChat() {
   async function fetchFriendlist() {
     const data = await fetchClient.GET("/friendships/{status}", {
       params: {
-        path: { status: "accept" },
+        path: { status: "accepted" },
       },
     });
     if (!data || !data.data) {
@@ -165,8 +166,8 @@ export default function GroupChat() {
 
     const message: Message = {
       id: Date.now().toString(),
-      senderId: "me",
-      senderName: "You",
+      senderId: myUser?.id || "",
+      senderName: myUser?.username || "Unknown",
       text: newMessage,
       timestamp: new Date(),
     };

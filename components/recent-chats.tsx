@@ -31,23 +31,44 @@ export function RecentChats() {
       return [];
     }
     const userId = user.data.id as string;
-    const recentChats: ChatPreview[] = data.data
-      .filter((chat: components["schemas"]["models.Chat"]) => {
-        return chat.users?.includes(userId);
-      })
-      .map((chat: components["schemas"]["models.Chat"]) => {
-        const lastMessage = chat.messages?.[0] || null;
-        const mapValue: ChatPreview = {
-          id: chat.id || "", // should not be empty string
-          type: chat.type as "Individual" | "Group",
-          name: chat.name || "Chat",
-          avatar: "/placeholder.svg",
-          lastMessage: lastMessage?.message || "",
-          timestamp: new Date(chat.updatedAt || Date.now()),
-          unread: 0, // Assume 0 unread (not implement)
-        };
-        return mapValue;
-      });
+    const recentChats: ChatPreview[] = await Promise.all(
+      data.data
+        .filter((chat: components["schemas"]["models.Chat"]) => {
+          return chat.users?.includes(userId);
+        })
+        .map(async (chat): Promise<ChatPreview> => {
+          let name = "Chat";
+
+          if (chat.type === "Individual") {
+            const anotherUserId = chat.users?.find((uid) => uid !== userId);
+            if (anotherUserId) {
+              try {
+                const userData = await fetchClient.GET("/users/{id}", {
+                  params: { path: { id: anotherUserId } },
+                });
+                name = userData.data?.username || "Unknown User";
+              } catch (err) {
+                console.error("Failed to fetch user:", err);
+                name = "Unknown User";
+              }
+            }
+          } else if (chat.type === "Group") {
+            name = chat.name || "Group Chat";
+          }
+
+          const lastMessage = chat.messages?.[0];
+
+          return {
+            id: chat.id || "",
+            type: chat.type as "Individual" | "Group",
+            name,
+            avatar: "/placeholder.svg",
+            lastMessage: lastMessage?.message || "",
+            timestamp: new Date(chat.updatedAt || Date.now()),
+            unread: 0, // Can update later
+          };
+        })
+    );
     return recentChats;
   }
 
