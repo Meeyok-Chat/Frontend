@@ -258,13 +258,7 @@ export default function NewGroup() {
                         <AvatarFallback>{user.name[0]}</AvatarFallback>
                       </Avatar>
                       <span
-                        className={`absolute bottom-0 right-0 h-2 w-2 rounded-full ring-1 ring-white ${
-                          user.status === "online"
-                            ? "bg-green-500"
-                            : user.status === "away"
-                            ? "bg-yellow-500"
-                            : "bg-slate-300"
-                        }`}
+                        className={`absolute bottom-0 right-0 h-2 w-2 rounded-full ring-1 ring-white ${"bg-green-500"}`}
                       />
                     </div>
                     <span>{user.name}</span>

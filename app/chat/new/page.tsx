@@ -101,7 +101,7 @@ export default function NewChat() {
       });
       // TODO: response should contain chat ID
       if (res.data?.id) {
-        router.push(`/chat/${res.data.id}`);
+        router.push(`/chat/user/${res.data.id}`);
       } else {
         // console.error("Failed to retrieve chat ID from response:", res.data);
         toast({
