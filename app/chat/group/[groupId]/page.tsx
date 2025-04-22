@@ -43,7 +43,6 @@ export default function GroupChat() {
     components["schemas"]["models.Chat"] | null
   >(null);
   const [showMembers, setShowMembers] = useState(false);
-  const [showAddMembers, setShowAddMembers] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [myUser, setMyUser] = useState<
     components["schemas"]["models.User"] | null
@@ -51,47 +50,34 @@ export default function GroupChat() {
   const [memberDatas, setMemberDatas] = useState<
     components["schemas"]["models.User"][]
   >([]);
-  const [friendlistDatas, setFriendlistDatas] = useState<
-    components["schemas"]["models.User"][]
-  >([]);
 
   async function fetchAllUsers() {
     const data = await fetchClient.GET("/users/me");
     if (!data || !data.data) {
       console.log("Error fetching user data");
-      return null;
+      return;
     }
     setMyUser(data.data);
 
-    const allUserDatas = await Promise.all(
-      group?.users?.map(async (member) => {
-        const user = await fetchClient.GET(`/users/{id}`, {
-          params: {
-            path: { id: member },
-          },
-        });
-        if (!user || !user.data) {
-          console.log("Error fetching user data");
-          return null;
-        }
-        return user.data;
-      }) || []
-    );
+    if (!group?.users) return;
 
-    setMemberDatas(allUserDatas.filter((user) => user !== null));
-  }
+    try {
+      const allMemberResponses = await Promise.all(
+        group.users.map((memberId) =>
+          fetchClient.GET("/users/{id}", {
+            params: { path: { id: memberId } },
+          })
+        )
+      );
 
-  async function fetchFriendlist() {
-    const data = await fetchClient.GET("/friendships/{status}", {
-      params: {
-        path: { status: "accepted" },
-      },
-    });
-    if (!data || !data.data) {
-      console.log("Error fetching user data");
-      return null;
+      const validMembers = allMemberResponses
+        .map((res) => res?.data)
+        .filter((user): user is NonNullable<typeof user> => !!user);
+      console.log("Fetched members:", validMembers);
+      setMemberDatas(validMembers);
+    } catch (error) {
+      console.error("Error fetching member data:", error);
     }
-    setFriendlistDatas(data.data);
   }
 
   // Fetching group data
@@ -128,14 +114,14 @@ export default function GroupChat() {
             path: { id: groupId },
           },
         });
-
+        console.log("Fetched chat history:", chatRes.data);
         const fetchedMessages = Array.isArray(chatRes.data)
           ? chatRes.data.map((msg: any) => ({
               id: msg.id,
               senderId: msg.senderId,
               senderName: msg.senderName,
               text: msg.text,
-              timestamp: new Date(msg.timestamp),
+              timestamp: new Date(msg.timestamp || Date.now()),
             }))
           : [];
 
@@ -146,12 +132,15 @@ export default function GroupChat() {
     };
 
     if (groupId) {
-      fetchGroupData().then(() => {
-        fetchAllUsers();
-        fetchFriendlist();
-      });
+      fetchGroupData();
     }
   }, [groupId]);
+
+  useEffect(() => {
+    if (group) {
+      fetchAllUsers();
+    }
+  }, [group]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -204,32 +193,6 @@ export default function GroupChat() {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     }
   }, [lastJsonMessage]);
-
-  // add friend to group
-  const handleAddMember = async (userId: string) => {
-    if (!group) return;
-
-    const res = await fetchClient.POST("/chats/{id}/users", {
-      params: {
-        path: { id: groupId },
-      },
-      body: {
-        users: [userId],
-      },
-    });
-
-    if (!res || !res.data || res.response.status !== 200) {
-      console.log("Error adding member to group");
-      return;
-    } else {
-      const addedMember = friendlistDatas.find((user) => user.id === userId);
-      if (!addedMember) {
-        console.log("Error finding added member in friend list");
-        return;
-      }
-      setMemberDatas((prevMembers) => [...prevMembers, addedMember]);
-    }
-  };
 
   if (!group || !memberDatas) {
     return <div>Loading...</div>;
@@ -315,9 +278,7 @@ export default function GroupChat() {
                             src="/placeholder.svg?height=40&width=40"
                             alt={member.name}
                           />
-                          <AvatarFallback>
-                            {member.name.charAt(0)}
-                          </AvatarFallback>
+                          <AvatarFallback>{member.name}</AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">{member.name}</p>
@@ -329,69 +290,6 @@ export default function GroupChat() {
                     ))}
                   </ul>
                 </div>
-                <DrawerFooter>
-                  <Button
-                    onClick={() => {
-                      setShowMembers(false);
-                      setShowAddMembers(true);
-                    }}
-                  >
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Add Members
-                  </Button>
-                  <DrawerClose asChild>
-                    <Button variant="outline">Close</Button>
-                  </DrawerClose>
-                </DrawerFooter>
-              </DrawerContent>
-            </Drawer>
-          )}
-
-          {showAddMembers && (
-            <Drawer open={showAddMembers} onOpenChange={setShowAddMembers}>
-              <DrawerContent>
-                <DrawerHeader>
-                  <DrawerTitle>Add Members</DrawerTitle>
-                  <DrawerDescription>
-                    Add new people to this group
-                  </DrawerDescription>
-                </DrawerHeader>
-                <div className="px-4 py-2">
-                  <Input placeholder="Search users..." className="mb-4" />
-                  <ul className="space-y-4">
-                    {friendlistDatas.map((user) => (
-                      <li
-                        key={user.id}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarImage
-                              src={"/placeholder.svg"}
-                              alt={user.username}
-                            />
-                            <AvatarFallback>
-                              {user.username?.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{user.username}</span>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleAddMember(user.id || "")}
-                        >
-                          Add
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <DrawerFooter>
-                  <DrawerClose asChild>
-                    <Button variant="outline">Close</Button>
-                  </DrawerClose>
-                </DrawerFooter>
               </DrawerContent>
             </Drawer>
           )}
