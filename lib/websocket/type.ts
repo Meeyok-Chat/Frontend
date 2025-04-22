@@ -1,16 +1,16 @@
-enum EventType {
+export enum EventType {
   EVENT_SEND_MESSAGE = "send_message",
   EVENT_NEW_MESSAGE = "new_message",
 }
 
-type WSMessageEvent = {
+export type WSMessageEvent = {
   chat_id: string;
   message: string;
   from: string;
   createAt: string;
 };
 
-type WebSocketEvent = {
+export type WebSocketEvent = {
   type: EventType;
   payload: WSMessageEvent;
 };

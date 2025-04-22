@@ -14,6 +14,7 @@ import { components } from "@/lib/api/schema";
 import { fetchClient } from "@/lib/api/client";
 import { useSocket } from "@/lib/websocket/context";
 import { toast } from "react-toastify";
+import { EventType } from "@/lib/websocket/type";
 
 export const runtime = "edge";
 
@@ -65,9 +66,11 @@ export default function PrivateChat() {
       return null;
     }
     const myUserId = myUserData.data.id as string;
-    const anotherUserId = chatData?.users?.find((id) => id !== myUserId) || null;
+    const anotherUserId =
+      chatData?.users?.find((id) => id !== myUserId) || null;
     if (!anotherUserId) {
       console.log("Unauthorized Access, No your user found in chat data");
+      console.log("Chat users: ", chatData?.users);
       return null;
     }
     const anotherUserData = await fetchClient.GET(`/users/{id}`, {
@@ -86,31 +89,32 @@ export default function PrivateChat() {
 
   // Fetching data
   useEffect(() => {
-    fetchChat()
-      .then((chat) => {
+    fetchChat().then((chat) => {
+      if (chat) {
         setChatData(chat);
-        if (chat) {
-          const chatMessages = chat.messages || [];
-          const formattedMessages = chatMessages.map((message) => ({
-            id: message.id || "",
-            senderId: message.from || "",
-            text: message.message || "",
-            timestamp: new Date(message.createAt || Date.now()),
-            isRead: true, // Assume all messages are read for now
-          }));
-          setMessages(formattedMessages);
-        }
-      })
-      .then(() =>
-        fetchUser()
-      );
+        const chatMessages = chat.messages || [];
+        const formattedMessages = chatMessages.map((message) => ({
+          id: message.id || "",
+          senderId: message.from || "",
+          text: message.message || "",
+          timestamp: new Date(message.createAt || Date.now()),
+          isRead: true,
+        }));
+        setMessages(formattedMessages);
+      }
+    });
   }, [chatId]);
+
+  useEffect(() => {
+    if (chatData) {
+      fetchUser();
+    }
+  }, [chatData]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
 
   const { sendJsonMessage, lastJsonMessage } = useSocket();
   const handleSendMessage = (e: React.FormEvent) => {
@@ -120,7 +124,7 @@ export default function PrivateChat() {
 
     const message: Message = {
       id: Date.now().toString(),
-      senderId: "me",
+      senderId: myUser?.id || "",
       text: newMessage,
       timestamp: new Date(),
       isRead: false,
@@ -134,7 +138,7 @@ export default function PrivateChat() {
         message: newMessage,
         from: myUser?.id || "", // should not be empty string
         createAt: new Date().toISOString(),
-      }
+      },
     });
     setNewMessage("");
   };

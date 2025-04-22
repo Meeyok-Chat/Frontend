@@ -73,33 +73,24 @@ export default function NewChat() {
   // TODO: This doesn't work ???
   const handleStartChat = async (userId: string, username: string) => {
     try {
-      // console.log("Starting chat with user ID:", userId);
+      console.log("Starting chat with user:", userId, username);
       const chatPayload = {
         name: username,
-        type: "friend",
-        updatedAt: new Date().toISOString(),
+        type: "Individual",
         users: [userId, currentUserId],
-        messages: [],
       };
 
       const res = await fetchClient.POST("/chats", {
         body: chatPayload,
       });
       console.log("Chat created:", res.data);
-      toast({
-        title: "Chat started",
-        description: "You can now start messaging",
-      });
+      toast("Chat started. You can now start messaging", { type: "success" });
       // TODO: response should contain chat ID
       if (res.data?.id) {
         router.push(`/chat/user/${res.data.id}`);
       } else {
         // console.error("Failed to retrieve chat ID from response:", res.data);
-        toast({
-          title: "Error",
-          description: "Failed to retrieve chat ID",
-          variant: "destructive",
-        });
+        toast("Failed to retrieve chat ID", { type: "error" });
       }
     } catch (error) {
       toast("Failed to create chat", { type: "error" });
