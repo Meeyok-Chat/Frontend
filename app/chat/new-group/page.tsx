@@ -56,7 +56,6 @@ const mockUsers = [
 type User = {
   id: string;
   name: string;
-  avatar?: string;
 };
 
 export default function NewGroup() {
@@ -168,10 +167,8 @@ export default function NewGroup() {
       try {
         const chatPayload = {
           name: groupName,
-          type: "friend",
-          updatedAt: new Date().toISOString(),
+          type: "Group",
           users: [...selectedUsers, currentUserId],
-          messages: [],
         };
 
         const res = await fetchClient.POST("/chats", {
@@ -251,10 +248,7 @@ export default function NewGroup() {
                   >
                     <div className="relative">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage
-                          src={user.avatar || "/placeholder.svg"}
-                          alt={user.name}
-                        />
+                        <AvatarImage src={"/placeholder.svg"} alt={user.name} />
                         <AvatarFallback>{user.name[0]}</AvatarFallback>
                       </Avatar>
                       <span

@@ -138,7 +138,7 @@ export function FriendsFeed() {
                       </Avatar>
                     </Link> */}
                     <div>
-                      <Link href={`/chat/${note.userId}`} className="font-medium hover:underline">
+                      <Link href={`/chat/new?q=${note.username}`} className="font-medium hover:underline">
                         {note.username}
                       </Link>
                       <p className="text-xs text-slate-500">{formatTimestamp(new Date(note.createdAt!))}</p>
