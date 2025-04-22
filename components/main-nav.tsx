@@ -9,22 +9,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useToast } from "@/components/ui/use-toast"
 import { LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "./user-provider"
+import { signout } from "@/lib/auth"
+import { toast } from "react-toastify"
+import { Skeleton } from "./ui/skeleton"
 
 export function MainNav() {
-  const { user } = useUser()
+  const { user, loading } = useUser()
   const router = useRouter()
-  const { toast } = useToast()
 
-  const handleSignOut = () => {
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully",
-    })
+  const handleSignOut = async () => {
+    await signout();
+    toast("You have been signed out successfully", { type: "info" });
     router.push("/")
   }
 
@@ -39,17 +38,23 @@ export function MainNav() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar>
-                    <AvatarImage src="/placeholder.svg?height=40&width=40" alt={user.displayName} />
-                    <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
-                  </Avatar>
+                  <User className="h-6 w-6" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{user.displayName}</p>
-                    {user.email && <p className="w-[200px] truncate text-sm text-slate-500">{user.email}</p>}
+                    {loading ? (
+                      <div className="flex flex-col space-y-1">
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-4 w-48" />
+                      </div>
+                    ) : (
+                      <>
+                        <p className="font-medium">{user.username}</p>
+                        {user.email && <p className="w-[200px] truncate text-sm text-slate-500">{user.email}</p>}
+                      </>
+                    )}
                   </div>
                 </div>
                 <DropdownMenuSeparator />
@@ -59,12 +64,12 @@ export function MainNav() {
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                {/* <DropdownMenuItem asChild>
                   <Link href="/settings" className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer text-red-600" onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />

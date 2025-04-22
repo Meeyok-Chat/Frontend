@@ -9,8 +9,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
 import { ArrowLeft, Search } from "lucide-react"
+import { toast } from "react-toastify"
 
 // Mock users data
 const mockUsers = [
@@ -27,7 +27,6 @@ export default function NewGroup() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { toast } = useToast()
 
   const filteredUsers = mockUsers.filter((user) => user.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
@@ -37,20 +36,12 @@ export default function NewGroup() {
 
   const handleCreateGroup = () => {
     if (!groupName.trim()) {
-      toast({
-        title: "Group name required",
-        description: "Please enter a name for your group",
-        variant: "destructive",
-      })
+      toast("Please enter a name for your group", { type: "error" })
       return
     }
 
     if (selectedUsers.length < 1) {
-      toast({
-        title: "Select members",
-        description: "Please select at least one member for your group",
-        variant: "destructive",
-      })
+      toast("Please select at least one member for your group", { type: "error" })
       return
     }
 
@@ -59,10 +50,7 @@ export default function NewGroup() {
     // Simulate API call to create group
     setTimeout(() => {
       setIsLoading(false)
-      toast({
-        title: "Group created",
-        description: `Created group "${groupName}" with ${selectedUsers.length} members`,
-      })
+      toast(`Created group "${groupName}" with ${selectedUsers.length} members`, { type: "success" })
       router.push("/chat/group/group1")
     }, 1000)
   }

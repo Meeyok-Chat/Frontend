@@ -30,13 +30,13 @@ export default function Home() {
               </Link>
             </div>
           </CardContent>
-          <CardFooter>
+          {/* <CardFooter>
             <Link href="/chat" className="w-full">
               <Button variant="ghost" className="w-full">
                 Continue as Guest
               </Button>
             </Link>
-          </CardFooter>
+          </CardFooter> */}
         </Card>
       </div>
     </div>

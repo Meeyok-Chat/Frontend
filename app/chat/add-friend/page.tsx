@@ -13,17 +13,16 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { fetchClient } from "@/lib/api/client";
+import { toast } from "react-toastify";
 
 export default function AddFriend() {
   const [friendId, setFriendId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const router = useRouter();
 
   const handleAddFriend = async (e: React.FormEvent) => {
@@ -41,28 +40,20 @@ export default function AddFriend() {
       const result = await fetchClient.POST("/friendships", {
         params: {
           query: {
-            id1: userId,
-            id2: friendId,
+            // TODO: Update type to match backend latest swagger 
+            id: friendId
           },
         },
       });
 
       if (!result.response.ok)
         throw Error(
-          "An error occurred while sending the friend request: " + result.error
+          "An error occurred while sending the friend request: " + result.error?.message
         );
 
-      toast({
-        title: "Friend request sent",
-        description: `Friend request sent to ${friendId}`,
-        variant: "default",
-      });
+      toast(`Friend request sent.`, { type: "success" });
     } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.message,
-        variant: "destructive",
-      });
+      toast(`Error: ${err.message}`, { type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -87,10 +78,10 @@ export default function AddFriend() {
         <form onSubmit={handleAddFriend}>
           <CardContent className="p-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="friendId">Friend's ID or Display Name</Label>
+              <Label htmlFor="friendId">Friend's ID</Label>
               <Input
                 id="friendId"
-                placeholder="Enter friend's ID or display name"
+                placeholder="Enter friend's ID"
                 value={friendId}
                 onChange={(e) => setFriendId(e.target.value)}
                 required
