@@ -22,7 +22,7 @@ import {
 import { fetchClient } from "@/lib/api/client";
 import { useSocket } from "@/lib/websocket/context";
 import { components } from "@/lib/api/schema";
-import { EventType } from "@/lib/websocket/type";
+import { EventType, WSMessageEvent } from "@/lib/websocket/type";
 
 export const runtime = "edge";
 
@@ -59,7 +59,7 @@ export default function GroupChat() {
     }
     setMyUser(data.data);
 
-    if (!group || !group.users ) return;
+    if (!group || !group.users) return;
     try {
       const allMemberResponses = await Promise.all(
         group.users.map((memberId) =>
@@ -85,7 +85,7 @@ export default function GroupChat() {
         path: { id: groupId },
       },
     });
-    
+
     const fetchedMessages: Message[] =
       chatRes.data?.messages?.map(
         (msg: components["schemas"]["models.Message"]) => {
@@ -138,7 +138,7 @@ export default function GroupChat() {
     };
 
     if (groupId) {
-      fetchGroupData()
+      fetchGroupData();
     }
   }, [groupId]);
 
@@ -188,18 +188,24 @@ export default function GroupChat() {
     if (!lastJsonMessage) return;
 
     if (lastJsonMessage.type === EventType.EVENT_NEW_MESSAGE) {
-      if (lastJsonMessage.payload.chat_id !== groupId) return;
+      const payload = lastJsonMessage.payload as WSMessageEvent;
+      if (payload.chat_id !== groupId) return;
 
       const newMessage: Message = {
         id: messages.length.toString(),
-        senderId: lastJsonMessage.payload.from,
+        senderId: payload.from,
         senderName:
-          memberDatas.find(
-            (member) => member.id === lastJsonMessage.payload.from
-          )?.username || "Unknown",
-        text: lastJsonMessage.payload.message,
-        timestamp: new Date(lastJsonMessage.payload.createAt),
+          memberDatas.find((member) => member.id === payload.from)?.username ||
+          "Unknown",
+        text: payload.message,
+        timestamp: new Date(payload.createAt),
       };
+
+      const isDuplicate = messages.some(
+        (msg) =>
+          msg.senderId === newMessage.senderId && msg.text === newMessage.text
+      );
+      if (isDuplicate) return;
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     }
   }, [lastJsonMessage]);
