@@ -14,7 +14,7 @@ import { components } from "@/lib/api/schema";
 import { fetchClient } from "@/lib/api/client";
 import { useSocket } from "@/lib/websocket/context";
 import { toast } from "react-toastify";
-import { EventType } from "@/lib/websocket/type";
+import { EventType, WSMessageEvent } from "@/lib/websocket/type";
 
 export const runtime = "edge";
 
@@ -130,7 +130,16 @@ export default function PrivateChat() {
       isRead: false,
     };
 
-    setMessages([...messages, message]);
+    const isDuplicate = messages.some(
+      (msg) =>
+        msg.text === message.text &&
+        msg.timestamp.getTime() === message.timestamp.getTime()
+    );
+    if (isDuplicate) {
+      setNewMessage("");
+      return;
+    }
+    setMessages((prev) => [...prev, message]);
     sendJsonMessage({
       type: EventType.EVENT_SEND_MESSAGE,
       payload: {
@@ -147,15 +156,22 @@ export default function PrivateChat() {
     if (!lastJsonMessage) return;
 
     if (lastJsonMessage.type === EventType.EVENT_NEW_MESSAGE) {
-      if (lastJsonMessage.payload.chat_id !== chatId) return;
+      const payload = lastJsonMessage.payload as WSMessageEvent;
+      if (payload.chat_id !== chatId) return;
 
       const newMessage: Message = {
         id: messages.length.toString(),
-        senderId: lastJsonMessage.payload.from,
-        text: lastJsonMessage.payload.message,
-        timestamp: new Date(lastJsonMessage.payload.createAt),
+        senderId: payload.from,
+        text: payload.message,
+        timestamp: new Date(payload.createAt),
         isRead: false,
       };
+
+      const isDuplicate = messages.some(
+        (msg) =>
+          msg.text === newMessage.text && msg.senderId === newMessage.senderId
+      );
+      if (isDuplicate) return;
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     }
   }, [lastJsonMessage]);
