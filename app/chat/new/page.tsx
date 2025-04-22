@@ -53,7 +53,6 @@ export default function NewChat() {
     const fetchUsers = async () => {
       try {
         const res = await fetchClient.GET("/users");
-        // console.log("Fetched users:", res.data);
         setUsers(
           (res.data || []).map((user: any) => ({
             id: user.id,
@@ -73,10 +72,17 @@ export default function NewChat() {
     user.id !== currentUserId && user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // TODO: This doesn't work ???
   const handleStartChat = async (userId: string, username: string) => {
     try {
-      console.log("Starting chat with user:", userId, username);
+      const resp = await fetchClient.GET("/chats");
+      if(!resp.data) throw new Error(resp.error.message)
+
+      const existingChat = resp.data.find(chat => chat.type !== "group" && chat.users?.includes(userId));
+      if (existingChat) {
+        router.push(`/chat/user/${existingChat.id}`);
+        return;
+      }
+
       const chatPayload = {
         name: username,
         type: "Individual",
@@ -86,13 +92,12 @@ export default function NewChat() {
       const res = await fetchClient.POST("/chats", {
         body: chatPayload,
       });
-      console.log("Chat created:", res.data);
+      
       toast("Chat started. You can now start messaging", { type: "success" });
-      // TODO: response should contain chat ID
       if (res.data?.id) {
         router.push(`/chat/user/${res.data.id}`);
       } else {
-        // console.error("Failed to retrieve chat ID from response:", res.data);
+        console.error("Failed to retrieve chat ID from response:", res.data);
         toast("Failed to retrieve chat ID", { type: "error" });
       }
     } catch (error) {
