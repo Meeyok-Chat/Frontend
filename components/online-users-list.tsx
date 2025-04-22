@@ -58,6 +58,9 @@ export function OnlineUsersList() {
     };
 
     setOnlineUsers(prev => {
+      if (newUser.username.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+        return prev
+      }
       return [...prev.filter((user) => user.id !== newUser.id), newUser];
     });
   }
