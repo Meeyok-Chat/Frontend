@@ -5,6 +5,7 @@ import { fetchClient } from "@/lib/api/client";
 import useWebSocket from "react-use-websocket";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { WebSocketEvent } from "@/lib/websocket/type";
 
 // context type
 interface SocketContextProps {
