@@ -3,8 +3,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Tag from "@/components/ui/tag";
 import { fetchClient } from "@/lib/api/client";
 import { components } from "@/lib/api/schema";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -135,19 +137,25 @@ export function RecentChats() {
                     </span>
                   )}
                 </div>
-                <div className="flex-1 overflow-hidden">
-                  <div className="flex items-center justify-between">
+                <div className="flex flex-col flex-grow overflow-hidden gap-1">
+                  <div className="flex items-center justify-between gap-1">
                     <p className="font-medium truncate">{chat.name}</p>
-                    <p className="text-xs text-slate-500">
-                      {chat.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                    <div className="flex flex-row gap-2 items-center">
+                      <p className="text-xs text-slate-500">
+                        {chat.timestamp.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+
+                      <Tag type={chat.type}/>
+                    </div>
+                  </div>
+                  <div className="flex flex-row">
+                    <p className="text-sm text-slate-500 truncate">
+                      {chat.lastMessage}
                     </p>
                   </div>
-                  <p className="text-sm text-slate-500 truncate">
-                    {chat.lastMessage}
-                  </p>
                 </div>
               </div>
             </Button>

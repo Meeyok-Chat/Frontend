@@ -23,6 +23,7 @@ import { fetchClient } from "@/lib/api/client";
 import { useSocket } from "@/lib/websocket/context";
 import { components } from "@/lib/api/schema";
 import { EventType, WSMessageEvent } from "@/lib/websocket/type";
+import Tag from "@/components/ui/tag";
 
 export const runtime = "edge";
 
@@ -264,24 +265,30 @@ export default function GroupChat() {
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <Card className="flex flex-col h-full">
-        <CardHeader className="flex flex-row items-center gap-4 pb-4 border-b">
-          <Link href="/chat" className="mr-2">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Avatar>
-            <AvatarImage src={"/placeholder.svg"} alt={group?.name} />
-            <AvatarFallback>{group?.name?.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <CardTitle className="flex-1">{group?.name}</CardTitle>
+        <CardHeader className="flex flex-row items-center pb-4 border-b justify-between gap-2">
+          <div className="flex flex-row items-center gap-4">
+            <Link href="/chat" className="mr-2">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Avatar>
+              <AvatarImage src={"/placeholder.svg"} alt={group?.name} />
+              <AvatarFallback>{group?.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <CardTitle className="flex-1">{group?.name}</CardTitle>
+            <Tag type="Group" className="text-xs" />
+          </div>
+
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setShowMembers(!showMembers)}
             aria-label="Show members"
+            className="w-fit px-1 flex-shrink-0"
           >
             <Users className="h-4 w-4" />
+            <span className="">Show members</span>
           </Button>
         </CardHeader>
 

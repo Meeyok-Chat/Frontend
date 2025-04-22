@@ -15,6 +15,7 @@ import { fetchClient } from "@/lib/api/client";
 import { useSocket } from "@/lib/websocket/context";
 import { toast } from "react-toastify";
 import { EventType, WSMessageEvent } from "@/lib/websocket/type";
+import Tag from "@/components/ui/tag";
 
 export const runtime = "edge";
 
@@ -197,6 +198,7 @@ export default function PrivateChat() {
             <AvatarFallback>{anotherUser.username?.charAt(0)}</AvatarFallback>
           </Avatar>
           <CardTitle>{anotherUser.username}</CardTitle>
+          <Tag type="Individual"/>
         </CardHeader>
         <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
