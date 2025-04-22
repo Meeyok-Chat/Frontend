@@ -19,36 +19,6 @@ export function GroupsList() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate fetching groups
-    // setTimeout(() => {
-    //   const mockGroups: Group[] = [
-    //     {
-    //       id: "group1",
-    //       name: "Project Team",
-    //       avatar: "/placeholder.svg?height=40&width=40",
-    //       memberCount: 5,
-    //       lastActive: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    //     },
-    //     {
-    //       id: "group2",
-    //       name: "Friends Chat",
-    //       avatar: "/placeholder.svg?height=40&width=40",
-    //       memberCount: 8,
-    //       lastActive: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    //     },
-    //     {
-    //       id: "group3",
-    //       name: "Gaming Squad",
-    //       avatar: "/placeholder.svg?height=40&width=40",
-    //       memberCount: 4,
-    //       lastActive: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    //     },
-    //   ]
-
-    //   setGroups(mockGroups)
-    //   setIsLoading(false)
-    // }, 1000)
-
     const fetchGroups = async () => {
       try {
         const response = await fetchClient.GET("/chats/user/{type}", {
@@ -56,12 +26,14 @@ export function GroupsList() {
             path: { type: "group" },
           },
         });
+        console.log('data', response.data)
         if (response.data) {
+          console.log(response.data);
           const formattedGroups = response.data.map((group: any) => ({
             id: group.id,
             name: group.name,
             memberCount: group.memberCount,
-            lastActive: new Date(group.lastActive),
+            lastActive: new Date(group.updatedAt),
           }));
           setGroups(formattedGroups);
         }
