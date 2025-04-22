@@ -52,7 +52,7 @@ export function OnlineUsersList() {
     <ScrollArea className="h-[200px]">
       <div className="space-y-2">
         {onlineUsers.map((user) => (
-          <Link key={user.id} href={`/chat/user/${user.id}`}>
+          <Link key={user.id} href={`/chat/new?q=${user.username}`}>
             <Button variant="ghost" className="w-full justify-start p-2 h-auto">
               <div className="flex items-center gap-3">
                 <span>{user.username}</span>
