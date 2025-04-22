@@ -6,6 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchClient } from "@/lib/api/client";
+import { useSocket } from "@/lib/websocket/context";
+import { EventType, NewGroupEvent } from "@/lib/websocket/type";
 
 type Group = {
   id: string;
@@ -17,6 +19,8 @@ type Group = {
 export function GroupsList() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const { lastJsonMessage } = useSocket();
 
   useEffect(() => {
     // Simulate fetching groups
@@ -73,6 +77,37 @@ export function GroupsList() {
     };
     fetchGroups();
   }, []);
+
+  async function appendGroup(groupId: string) {
+    const newGroupData = await fetchClient.GET("/chats/{id}", {
+      params: {
+        path: { id: groupId },
+      },
+    });
+
+    if (!newGroupData || !newGroupData.data) {
+      console.log("Error while fetching new group data", newGroupData.error);
+      return;
+    }
+
+    const newGroup: Group = {
+      id: newGroupData.data.id || "",
+      name: newGroupData.data.name || "",
+      memberCount: newGroupData.data.users?.length || 0,
+      lastActive: new Date(newGroupData.data.updatedAt || Date.now()),
+    };
+
+    const isAdded = groups.some((group) => group.id === newGroup.id);
+    if (isAdded) return;
+    setGroups(prev => [...prev, newGroup]);
+  }
+
+  useEffect(() => {
+    if (lastJsonMessage && lastJsonMessage.type === EventType.EVENT_NEW_GROUP) {
+      const groupId = (lastJsonMessage.payload as NewGroupEvent).chat_id;
+      appendGroup(groupId);
+    }
+  }, [lastJsonMessage]);
 
   if (isLoading) {
     return (
