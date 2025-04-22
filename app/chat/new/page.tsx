@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { fetchClient } from "@/lib/api/client";
 import { toast } from "react-toastify";
@@ -22,6 +22,9 @@ export default function NewChat() {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const router = useRouter();
+
+  const params = useSearchParams();
+  useEffect(() => { setSearchQuery(params.get("q") || "") }, [])
 
   // get current user id
   const getCurrentUserId = async () => {
@@ -67,7 +70,7 @@ export default function NewChat() {
   }, []);
 
   const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    user.id !== currentUserId && user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // TODO: This doesn't work ???
@@ -120,7 +123,7 @@ export default function NewChat() {
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-slate-500">Online Users</h3>
+            <h3 className="text-sm font-medium text-slate-500">Users</h3>
             {filteredUsers.length > 0 ? (
               <ul className="space-y-2">
                 {filteredUsers.map((user) => (
@@ -131,7 +134,7 @@ export default function NewChat() {
                       onClick={() => handleStartChat(user.id, user.name)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="relative">
+                        {/* <div className="relative">
                           <Avatar>
                             <AvatarImage
                               src={user.avatar || "/placeholder.svg"}
@@ -142,7 +145,7 @@ export default function NewChat() {
                             </AvatarFallback>
                           </Avatar>
                           <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-1 ring-white" />
-                        </div>
+                        </div> */}
                         <span>{user.name}</span>
                       </div>
                     </Button>

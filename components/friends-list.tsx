@@ -69,7 +69,7 @@ export function FriendsList() {
     <ScrollArea className="h-[200px]">
       <div className="space-y-2">
         {friends.map((friend) => (
-          <Link key={friend.id} href={`/chat/user/${friend.id}`}>
+          <Link key={friend.id} href={`/chat/new?q=${friend.username}`}>
             <Button variant="ghost" className="w-full justify-start p-2 h-auto">
               <div className="flex items-center gap-3 w-full">
                 {/* <div className="relative">
@@ -86,9 +86,9 @@ export function FriendsList() {
                 </div> */}
                 <div className="flex-1 flex flex-row items-center gap-4 overflow-hidden">
                   <p className="truncate">{friend.username}</p>
-                  <p className="text-xs text-slate-500">
+                  {/* <p className="text-xs text-slate-500">
                     {friend.status === "online" ? "(Online)" : "(Offline)"}
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </Button>
