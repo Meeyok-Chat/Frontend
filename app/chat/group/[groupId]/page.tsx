@@ -51,6 +51,17 @@ export default function GroupChat() {
     components["schemas"]["models.User"][]
   >([]);
 
+  async function fetchUser(userId: string) {
+    const data = await fetchClient.GET("/users/{id}", {
+      params: { path: { id: userId } },
+    });
+    if (!data || !data.data) {
+      console.log("Error fetching user data", data.error);
+      return null;
+    }
+    return data.data;
+  }
+
   async function fetchAllUsers() {
     const data = await fetchClient.GET("/users/me");
     if (!data || !data.data) {
@@ -62,17 +73,14 @@ export default function GroupChat() {
     if (!group || !group.users) return;
     try {
       const allMemberResponses = await Promise.all(
-        group.users.map((memberId) =>
-          fetchClient.GET("/users/{id}", {
-            params: { path: { id: memberId } },
-          })
-        )
+        group.users.map((memberId) => fetchUser(memberId))
       );
 
-      const validMembers = allMemberResponses
-        .map((res) => res?.data)
-        .filter((user): user is NonNullable<typeof user> => !!user);
+      const validMembers = allMemberResponses.filter(
+        (member) => member !== null
+      );
       setMemberDatas(validMembers);
+      return validMembers;
     } catch (error) {
       console.error("Error fetching member data:", error);
     }
@@ -80,7 +88,7 @@ export default function GroupChat() {
 
   async function fetchMessages() {
     // Fetch chat history
-    if (!group) return;
+    if (!group || messages.length != 0) return;
 
     const fetchedMessages: Message[] =
       group.messages?.map((msg: components["schemas"]["models.Message"]) => {
@@ -100,8 +108,14 @@ export default function GroupChat() {
   }
 
   const maybeAddUserToGroup = async () => {
-    if (!group || !myUser || !group.users || !myUser.id) return;
-    if (group.users?.includes(myUser.id)) return;
+    if (
+      !group ||
+      !myUser ||
+      !group.users ||
+      !myUser.id ||
+      group.users?.includes(myUser.id)
+    )
+      return;
 
     try {
       // Add user to group
@@ -119,35 +133,35 @@ export default function GroupChat() {
     }
   };
 
+  const fetchGroupData = async () => {
+    try {
+      // Fetch group info
+      const currentGroup = await fetchClient.GET("/chats/{id}", {
+        params: {
+          path: { id: groupId },
+        },
+      });
+
+      if (!currentGroup.data) {
+        console.warn("Group not found");
+        setGroup({
+          id: groupId,
+          name: "Unknown Group",
+          messages: [],
+          type: "Group",
+          users: [],
+        });
+        return;
+      }
+
+      setGroup(currentGroup.data);
+    } catch (error) {
+      console.error("Error fetching group or chat history:", error);
+    }
+  };
+
   // Fetching group data
   useEffect(() => {
-    const fetchGroupData = async () => {
-      try {
-        // Fetch group info
-        const currentGroup = await fetchClient.GET("/chats/{id}", {
-          params: {
-            path: { id: groupId },
-          },
-        });
-
-        if (!currentGroup.data) {
-          console.warn("Group not found");
-          setGroup({
-            id: groupId,
-            name: "Unknown Group",
-            messages: [],
-            type: "Group",
-            users: [],
-          });
-          return;
-        }
-
-        setGroup(currentGroup.data);
-      } catch (error) {
-        console.error("Error fetching group or chat history:", error);
-      }
-    };
-
     if (groupId) {
       fetchGroupData();
     }
@@ -201,15 +215,25 @@ export default function GroupChat() {
       (member) => member.id === messageEvent.from
     );
 
+    let memberList = memberDatas;
     if (!isKnownSender) {
-      await fetchAllUsers();
+      await fetchGroupData();
+      const unknownSender = await fetchUser(messageEvent.from);
+      if (unknownSender) {
+        memberList = [...memberDatas, unknownSender];
+        setMemberDatas(memberList);
+      } else {
+        console.warn("Unknown sender:", messageEvent.from);
+        return;
+      }
     }
+
     const newMessage: Message = {
-      id: messages.length.toString(),
+      id: Date.now().toString(),
       senderId: messageEvent.from,
       senderName:
-        memberDatas.find((member) => member.id === messageEvent.from)?.username ||
-        "Unknown",
+        memberList.find((member) => member.id === messageEvent.from)
+          ?.username || "Unknown",
       text: messageEvent.message,
       timestamp: new Date(messageEvent.createAt),
     };
