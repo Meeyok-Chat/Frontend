@@ -110,16 +110,13 @@ export default function GroupChat() {
     const fetchGroupData = async () => {
       try {
         // Fetch group info
-        const groupsRes = await fetchClient.GET("/chats/user/{type}", {
+        const currentGroup = await fetchClient.GET("/chats/{id}", {
           params: {
-            path: { type: "group" },
+            path: { id: groupId },
           },
         });
 
-        const groups = groupsRes.data || [];
-        const currentGroup = groups.find((g) => g.id === groupId);
-
-        if (!currentGroup) {
+        if (!currentGroup.data) {
           console.warn("Group not found");
           setGroup({
             id: groupId,
@@ -131,7 +128,7 @@ export default function GroupChat() {
           return;
         }
 
-        setGroup(currentGroup);
+        setGroup(currentGroup.data);
       } catch (error) {
         console.error("Error fetching group or chat history:", error);
       }
