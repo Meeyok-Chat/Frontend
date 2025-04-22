@@ -6,18 +6,22 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
 import { fetchClient } from "@/lib/api/client"
+import { paths } from "@/lib/api/schema"
 import { Heart, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { toast } from "react-toastify"
+import { useUser } from "./user-provider"
 
 type Note = {
-  id?: string
-  userId?: string
-  userName?: string
-  content?: string
-  createdAt?: string
+  id: string
+  userId: string
+  username: string
+  content: string
+  createdAt: string
 }
+
+// type PostResponse = paths["/posts"]["get"]["responses"]["200"]["content"]["application/json"]
 
 export function FriendsFeed() {
   const [notes, setNotes] = useState<Note[]>([])
@@ -25,45 +29,68 @@ export function FriendsFeed() {
   const [newNote, setNewNote] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setIsLoading(true)
+  const fetchPosts = async () => {
+    setIsLoading(true)
 
-      try {
-        const response = await fetchClient.GET("/posts")
-        if (!response.data) throw new Error(response.error.message)
-        setNotes(response.data)
-      } catch (err: any) {
-        console.error(err);
-        toast(`Error: ${err.message}`, { type: "error" });
-      } finally {
-        setIsLoading(false)
-      }
+    try {
+      const postResp = await fetchClient.GET("/posts/")
+      if (!postResp.data) throw new Error(postResp.error.message)
+
+      const usersResp = await fetchClient.GET("/users")
+      if (!usersResp.data) throw new Error(usersResp.error.message)
+
+      const posts = postResp.data;
+      const users = usersResp.data;
+
+      const notes: Note[] = posts.map((post) => ({
+        content: post.content!,
+        createdAt: post.createdAt!,
+        id: post.id!,
+        userId: post.userId!,
+        username: users.find((user) => user.id === post.userId)?.username!,
+      }))
+
+      notes.reverse()
+
+      setNotes(notes)
+    } catch (err: any) {
+      console.error(err);
+      toast(`Error: ${err.message}`, { type: "error" });
+    } finally {
+      setIsLoading(false)
     }
+  }
+  useEffect(() => {
     fetchPosts()
   }, [])
 
-  const handlePostNote = () => {
+  const handlePostNote = async () => {
     if (!newNote.trim()) return
 
     setIsSubmitting(true)
 
-    // Simulate posting a note
-    setTimeout(() => {
-      const newNoteObj: Note = {
-        id: `note${Date.now()}`,
-        userId: "me",
-        userName: "You",
-        content: newNote,
-        createdAt: new Date().toISOString(),
-      }
+    try {
+      const user = await fetchClient.GET("/users/me")
+      if (!user.data) throw new Error(user.error.message)
 
-      setNotes([newNoteObj, ...notes])
-      setNewNote("")
+
+      const response = await fetchClient.POST("/posts", {
+        body: {
+          content: newNote,
+          createdAt: new Date().toISOString(),
+          title: "New Post",
+          userId: user.data.id
+        }
+      })
+      if (!response.response.ok) throw new Error(response.error?.message)
+
+      fetchPosts()
+      toast("Your post has been submitted", { type: "info" })
+    } catch (err: any) {
+      toast(`Error: ${err.message}`, { type: "error" });
+    } finally {
       setIsSubmitting(false)
-
-      toast("Your note has been posted to your friends feed", { type: "success" })
-    }, 1000)
+    }
   }
 
 
@@ -112,7 +139,7 @@ export function FriendsFeed() {
                     </Link> */}
                     <div>
                       <Link href={`/chat/${note.userId}`} className="font-medium hover:underline">
-                        {note.userName}
+                        {note.username}
                       </Link>
                       <p className="text-xs text-slate-500">{formatTimestamp(new Date(note.createdAt!))}</p>
                     </div>
