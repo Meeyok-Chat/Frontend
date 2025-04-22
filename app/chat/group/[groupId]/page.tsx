@@ -105,6 +105,26 @@ export default function GroupChat() {
     setMessages(fetchedMessages);
   }
 
+  const maybeAddUserToGroup = async () => {
+    if (!group || !myUser || !group.users || !myUser.id) return;
+    if (group.users?.includes(myUser.id)) return;
+
+    try {
+      // Add user to group
+      await fetchClient.POST("/chats/{id}/users", {
+        params: { path: { id: groupId } },
+        body: {
+          users: [myUser.id],
+        },
+      });
+
+      // Optionally update state to reflect the change
+      setGroup({ ...group, users: [...group.users, myUser.id] });
+    } catch (err) {
+      console.error("Failed to add user to group:", err);
+    }
+  };
+
   // Fetching group data
   useEffect(() => {
     const fetchGroupData = async () => {
@@ -142,6 +162,7 @@ export default function GroupChat() {
   useEffect(() => {
     if (!group) return;
     fetchAllUsers();
+    maybeAddUserToGroup();
   }, [group]);
 
   useEffect(() => {
@@ -294,7 +315,7 @@ export default function GroupChat() {
                           <AvatarFallback>{member.name}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{member.name}</p>
+                          <p className="font-medium">{member.username}</p>
                           <p className="text-xs text-slate-500">
                             {member.id === "me" ? "You" : "Online"}
                           </p>
