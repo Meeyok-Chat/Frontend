@@ -56,7 +56,7 @@ export function RecentChats() {
             name = chat.name || "Group Chat";
           }
 
-          const lastMessage = chat.messages?.[0];
+          const lastMessage = chat.messages?.at(-1);
 
           return {
             id: chat.id || "",
