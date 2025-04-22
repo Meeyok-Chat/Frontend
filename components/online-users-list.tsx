@@ -57,12 +57,18 @@ export function OnlineUsersList() {
       username: newUserData.data.username || "",
     };
 
-    setOnlineUsers(prev => {
-      if (newUser.username.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/) || !newUser.username) {
-        console.log("Email detected, not adding to online users list")
-        return prev
-      }
-      return [...prev.filter((user) => user.id !== newUser.id), newUser];
+    setOnlineUsers((prev) => {
+      return [
+        ...prev.filter(
+          (user) =>
+            user.id !== newUser.id &&
+            !user.username.match(
+              /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+            ) &&
+            newUser.username
+        ),
+        newUser,
+      ];
     });
   }
 
