@@ -70,7 +70,7 @@ export function GroupsList() {
 
     const isAdded = groups.some((group) => group.id === newGroup.id);
     if (isAdded) return;
-    setGroups(prev => [...prev, newGroup]);
+    setGroups(prev => [newGroup, ...prev]);
   }
 
   useEffect(() => {
