@@ -57,10 +57,9 @@ export function OnlineUsersList() {
       username: newUserData.data.username || "",
     };
 
-    const isAdded = onlineUsers.some((user) => user.id === newUser.id);
-    console.log(onlineUsers, isAdded)
-    if (isAdded) return;
-    setOnlineUsers(prev => [...prev, newUser]);
+    setOnlineUsers(prev => {
+      return [...prev.filter((user) => user.id !== newUser.id), newUser];
+    });
   }
 
   useEffect(() => {
