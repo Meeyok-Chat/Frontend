@@ -16,17 +16,17 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { signin } from "@/lib/auth";
 import { fetchClient } from "@/lib/api/client";
 import { useSocket } from "@/lib/websocket/context";
 import { toast } from "react-toastify";
+import { useAuth } from "@/lib/auth";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { setConnectedUserId } = useSocket();
+  const { signin } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,11 +35,6 @@ export default function SignIn() {
     try {
       await signin(email, password);
 
-      const user = await fetchClient.GET("/users/me");
-      const userId = user.data?.id;
-      if (!userId) throw Error("Unable to get user id");
-
-      setConnectedUserId(userId);
       toast("Welcome to Meeyok Chat!", { type: "info" });
       router.push("/chat");
     } catch (error: any) {
