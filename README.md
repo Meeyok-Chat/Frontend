@@ -5,7 +5,7 @@ This is the frontend React + Tailwind project for Meeyok Chat project, a final p
 ## Installation
 
 1. Clone the repository
-2. Install dependencies with `npm install`
+2. Install dependencies with `npm install` (may have to use `--legacy-peer-deps` if peer dependency issue exists)
 3. Start the development server with `npm run dev`
 
 ## Development Guide

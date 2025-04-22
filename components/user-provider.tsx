@@ -1,46 +1,57 @@
 "use client"
 
+import { fetchClient } from "@/lib/api/client"
 import type React from "react"
 
 import { createContext, useContext, useState, useEffect } from "react"
 
 type User = {
-  id: string
-  displayName: string
+  id?: string
+  username?: string
   email?: string
-  isGuest: boolean
 }
 
 type UserContextType = {
   user: User | null
   setUser: (user: User | null) => void
   isAuthenticated: boolean
+  loading: boolean
+  refetchUser: () => void
 }
 
 const UserContext = createContext<UserContextType>({
   user: null,
-  setUser: () => {},
+  loading: false,
+  setUser: () => { },
+  refetchUser: () => { },
   isAuthenticated: false,
 })
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const isAuthenticated = !!user && !user.isGuest
+  const [loading, setLoading] = useState(true)
+  const isAuthenticated = !!user //&& !user.isGuest
+
+  const fetchUser = async () => {
+    setLoading(true)
+    try {
+      const response = await fetchClient.GET("/users/me")
+      if (!response.data) throw new Error(response.error.message)
+
+      setUser(response.data)
+    } catch (error) {
+      console.error("Error fetching user data:", error)
+    } finally{
+      setLoading(false)
+    }
+  }
 
   // Simulate loading user data
   useEffect(() => {
-    // In a real app, you would check for a session or token
-    const mockUser: User = {
-      id: "user123",
-      displayName: "John Doe",
-      email: "john@example.com",
-      isGuest: false,
-    }
-
-    setUser(mockUser)
+    fetchUser()
   }, [])
 
-  return <UserContext.Provider value={{ user, setUser, isAuthenticated }}>{children}</UserContext.Provider>
+  return <UserContext.Provider value={{ user, setUser, refetchUser: fetchUser, isAuthenticated, loading }}>{children}</UserContext.Provider>
 }
 
 export const useUser = () => useContext(UserContext)

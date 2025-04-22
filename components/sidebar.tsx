@@ -1,7 +1,7 @@
 "use client"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { Home, MessageSquare, Users, UserPlus, Settings } from "lucide-react"
+import { Home, MessageSquare, Users, UserPlus, Settings, UserCheck } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -27,10 +27,15 @@ const sidebarItems = [
     href: "/chat/add-friend",
   },
   {
-    title: "Settings",
-    icon: Settings,
-    href: "/settings",
+    title: "Friend Requests",
+    icon: UserCheck,
+    href: "/chat/pending-requests",
   },
+  // {
+  //   title: "Settings",
+  //   icon: Settings,
+  //   href: "/settings",
+  // },
 ]
 
 export function Sidebar() {

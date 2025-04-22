@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SocketProvider } from "@/lib/websocket/context";
+import { ToastContainer, toast } from 'react-toastify';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,6 +30,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <ToastContainer/>
+
+            {/* Toaster below is deprecated */}
             <Toaster />
           </ThemeProvider>
         </SocketProvider>

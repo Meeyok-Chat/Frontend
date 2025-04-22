@@ -4,12 +4,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { fetchClient } from "@/lib/api/client";
+import { toast } from "react-toastify";
 
 type User = {
   id: string;
@@ -22,7 +22,6 @@ export default function NewChat() {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const router = useRouter();
-  const { toast } = useToast();
 
   // get current user id
   const getCurrentUserId = async () => {
@@ -40,11 +39,7 @@ export default function NewChat() {
       const userId = await getCurrentUserId();
       setCurrentUserId(userId || "");
       if (!userId) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch current user ID",
-          variant: "destructive",
-        });
+        toast("Failed to fetch current user ID", { type: "error" });
       }
     };
 
@@ -64,11 +59,7 @@ export default function NewChat() {
           }))
         );
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch users",
-          variant: "destructive",
-        });
+        toast("Failed to fetch users", { type: "error" });
       }
     };
 
@@ -111,11 +102,7 @@ export default function NewChat() {
         });
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create chat",
-        variant: "destructive",
-      });
+      toast("Failed to create chat", { type: "error" });
     }
   };
 

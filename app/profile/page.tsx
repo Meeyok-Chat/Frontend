@@ -2,36 +2,62 @@
 
 import type React from "react"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/components/ui/use-toast"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { fetchClient } from "@/lib/api/client"
+import { toast } from "react-toastify"
 
 export default function Profile() {
-  const [displayName, setDisplayName] = useState("John Doe")
-  const [status, setStatus] = useState("Available")
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
+  const [displayName, setDisplayName] = useState("Loading...")
+  const [id, setId] = useState("Loading...")
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
-    e.preventDefault()
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetchClient.GET("/users/me");
+        if (response.data) {
+          setDisplayName(response.data.username ?? '');
+          setId(response.data.id ?? '');
+        } else {
+          throw Error("An error occurred while loading user profile: " + response.error.message);
+        }
+      } catch (err: any) {
+        toast(err.message, { type: "error" });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchUserProfile();
+  }, [])
+  const copyIdToClipboard = () => {
+    navigator.clipboard.writeText(id);
+    toast("User ID copied to clipboard", { type: "info" });
+  }
+  const handleUpdateProfile = async () => {
     setIsLoading(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully",
+    try {
+      const result = await fetchClient.PATCH("/users/{id}/username", {
+        params: {
+          path: { id }
+        },
+        body: {
+          username: displayName,
+        }
       })
-    }, 1500)
+      if (!result.response.ok) throw Error("An error occured while trying to set username: " + result.error);
+    } catch (err: any) {
+      toast(err.message, { type: "error" });
+      console.error('Error while editing profile', err);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -49,9 +75,9 @@ export default function Profile() {
               <CardDescription>Manage your personal information</CardDescription>
             </div>
           </CardHeader>
-          <form onSubmit={handleUpdateProfile}>
+          <div >
             <CardContent className="p-4 space-y-6">
-              <div className="flex flex-col items-center justify-center space-y-2">
+              {/* <div className="flex flex-col items-center justify-center space-y-2">
                 <Avatar className="h-24 w-24">
                   <AvatarImage src="/placeholder.svg?height=96&width=96" alt="Profile" />
                   <AvatarFallback>JD</AvatarFallback>
@@ -59,7 +85,7 @@ export default function Profile() {
                 <Button variant="outline" size="sm">
                   Change Avatar
                 </Button>
-              </div>
+              </div> */}
 
               <div className="space-y-2">
                 <Label htmlFor="displayName">Display Name</Label>
@@ -67,24 +93,29 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Input id="status" value={status} onChange={(e) => setStatus(e.target.value)} />
+                <Label htmlFor="status">User ID</Label>
+                <div className="flex flex-row items-center gap-4">
+                  <div className="flex text-base" >{id}</div>
+                  <Button variant="outline" size="sm" onClick={copyIdToClipboard}>
+                    Copy User ID
+                  </Button>
+                </div>
               </div>
 
-              <Separator />
+              {/* <Separator /> */}
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="note">Status Note</Label>
                 <Textarea id="note" placeholder="Share what's on your mind..." className="resize-none" rows={3} />
                 <p className="text-xs text-slate-500">This note will be visible to your friends</p>
-              </div>
+              </div> */}
             </CardContent>
             <CardFooter className="border-t p-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" onClick={handleUpdateProfile} disabled={isLoading}>
                 {isLoading ? "Updating..." : "Update Profile"}
               </Button>
             </CardFooter>
-          </form>
+          </div>
         </Card>
       </div>
     </div>

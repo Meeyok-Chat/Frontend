@@ -61,7 +61,7 @@ export default function ChatDashboard() {
                 }`}
                 onClick={() => setActiveTab("feed")}
               >
-                Friends Feed
+                Feed
               </button>
             </div>
             <div className="mt-4">
